@@ -31,15 +31,16 @@ static bool reactive_gradient(effect_params_t* params) {
     // get gradient color
     const rgb_led led = g_rgb_leds[i];
     uint8_t hue = rgb_matrix_config.hue;
+
     if (led.matrix_co.raw != 0xFF) {
       // Keys
-      hue += 10 * led.matrix_co.row;
+      //hue; //10 * led.matrix_co.row;
     } else {
       // Underglow (same color as last row of keys)
-      hue += 10 * (MATRIX_ROWS - 1);
+      //hue; //+= 10 * (MATRIX_ROWS - 1);
     }
 
-    HSV hsv = { hue, 0xFF, rgb_matrix_config.val };
+    HSV hsv = { hue, 0x00, rgb_matrix_config.val / 2 };
     RGB rgb = hsv_to_rgb(hsv);
 
     // checks if key has been hit
@@ -60,7 +61,7 @@ static bool reactive_gradient(effect_params_t* params) {
       rgb.b = highlight.b - pct * (highlight.b - rgb.b);
     }
 
-    rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
+    rgb_matrix_set_color(i, 255, 0, 0);
   }
 
   return led_max < DRIVER_LED_TOTAL;
