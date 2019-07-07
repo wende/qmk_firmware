@@ -1,23 +1,81 @@
 RGB_MATRIX_EFFECT(reactive_gradient)
-// RGB_MATRIX_EFFECT(rgb_matrix_snake)
+RGB_MATRIX_EFFECT(two_o_four_eight)
+RGB_MATRIX_EFFECT(shortcuts_cheatsheet)
 
 #ifdef RGB_MATRIX_CUSTOM_EFFECT_IMPLS
 
 #include "rgb_matrix.h"
 
 #include <math.h>
+#include <print.h>
+
 #define max(a, b) (((a) > (b)) ? (a) : (b))
 #define min(a, b) (((a) < (b)) ? (a) : (b))
+#define foreach(item, array) \
+    for(int keep = 1, \
+            count = 0,\
+            size = sizeof (array) / sizeof *(array); \
+        keep && count != size; \
+        keep = !keep, count++) \
+      for(item = (array) + count; keep; keep = !keep)
 
 /*---------------------------------  Outrun  ---------------------------------*/
+enum KEEB {
+    K_ESC = 0, K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9, K_0, K_HYPHEN, K_EQL, K_BSP, K_DEL,
+    K_TAB, K_Q, K_W, K_E, K_R, K_T, K_Y, K_U, K_I, K_O, K_P, K_LBRACKET, K_RBRACKET, K_BACKSLASH, K_HOME,
+    K_CPSL, K_A, K_S, K_D, K_F, K_G, K_H, K_J, K_K, K_L, K_SEMICOLON, K_GRAVE, K_RET, K_PGUP,
+    K_L_SHIFT, K_Z, K_X, K_C, K_V, K_B, K_N, K_M, K_COMMA, K_DOT, K_SLASH, K_R_SHIFT, K_ARROW_UP, K_PGDN,
+    K_L_CTRL, K_L_ALT, K_L_META, K_SPC, K_R_ALT, K_FN, K_ARROW_LEFT, K_ARROW_DOWN, K_ARROW_RIGHT, FIRST_LED
+};
+uint8_t LAST_LED = FIRST_LED + 37;
+
+uint8_t i = 0;
+uint8_t myTick = 0;
+
+static uint8_t get_last_key(void){
+    return g_last_hit_tracker.index[g_last_hit_tracker.count - 1];
+}
+
+// bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+//     print("BOO");
+//     return true;
+// }
+
+static bool two_o_four_eight(effect_params_t* params) {
+    RGB_MATRIX_USE_LIMITS(led_min, led_max);
+    myTick += 1;
+    if(myTick % 64 == 0) {
+        i = i + 1;
+        uprintf("%d\n", get_last_key());
+        rgb_matrix_set_color(i, 255, 0, 0);
+    }
+    rgb_matrix_set_color(FIRST_LED, 0, 0, 255);
+    rgb_matrix_set_color(LAST_LED, 0, 0, 255);
+    return false;
+}
+
+/*----------------------------------  Shortcut Cheatsheet  ---------------------------------*/
+static bool shortcuts_cheatsheet(effect_params_t* params) {
+    int keys[] = { K_E, K_A, K_K, K_H, K_D };
+    foreach(int *key, keys){
+        uprintf("%d\n", *key);
+        rgb_matrix_set_color(*key, 0, 255, 0);
+    };
+    return false;
+}
+
+/*----------------------------------  Reactive Gradient  ---------------------------------*/
 
 const uint8_t FADEOUT_SPEED = 120; // personal preference
 
 static bool reactive_gradient(effect_params_t* params) {
   RGB_MATRIX_USE_LIMITS(led_min, led_max);
 
+
+
   const uint16_t max_tick = 65535 / FADEOUT_SPEED;
 
+   // print("string");
   // calculate target color
   const HSV hsv = {
     rgb_matrix_config.hue + 80,
@@ -48,6 +106,7 @@ static bool reactive_gradient(effect_params_t* params) {
     for(uint8_t j = g_last_hit_tracker.count; j > 0; j--) {
       if (g_last_hit_tracker.index[j - 1] == i) {
         tick = g_last_hit_tracker.tick[j - 1];
+        uprintf("%d\n", tick);
         break;
       }
     }
@@ -61,7 +120,7 @@ static bool reactive_gradient(effect_params_t* params) {
       rgb.b = highlight.b - pct * (highlight.b - rgb.b);
     }
 
-    rgb_matrix_set_color(i, 255, 255, 0);
+    rgb_matrix_set_color(i, rgb.r, rgb.b, rgb.b);
   }
 
   return led_max < DRIVER_LED_TOTAL;

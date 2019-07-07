@@ -1,5 +1,6 @@
 #include QMK_KEYBOARD_H
 #include "process_unicode.h"
+#include <print.h>
 
 enum alt_keycodes {
     U_T_AUTO = SAFE_RANGE, //USB Extra Port Toggle Auto Detect / Always Active
@@ -64,7 +65,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_ACTIONS] = LAYOUT(
         KC_GRV,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______, KC_MUTE, \
-        _______, RGB_SPD, RGB_VAI, RGB_SPI, RGB_HUI, RGB_SAI, _______, U_T_AUTO,U_T_AGCR,_______, KC_PSCR, KC_SLCK, KC_PAUS, _______, KC_END,  \
+        _______, RGB_SPD, RGB_VAI, RGB_SPI, RGB_HUI, RGB_SAI, _______, U_T_AUTO,U_T_AGCR,_______, KC_PSCR, KC_SLCK, KC_PAUS, DBG_KBD, KC_END,  \
         _______, RGB_RMOD,RGB_VAD, RGB_MOD, RGB_HUD, RGB_SAD, _______, _______, _______, _______, _______, _______,          _______, KC_VOLU, \
         _______, RGB_TOG, _______, _______, _______, MD_BOOT, TG_NKRO, DBG_TOG, KC_MPRV, KC_MNXT, KC_MPLY, _______,          _______, KC_VOLD, \
         _______, _______, _______,                            KC_MPLY,                            MO(2),   _______, _______, _______, _______  \
@@ -91,8 +92,26 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #define MODS_CTRL  (get_mods() & MOD_BIT(KC_LCTL)   || get_mods() & MOD_BIT(KC_RCTRL))
 #define MODS_ALT   (get_mods() & MOD_BIT(KC_LALT)   || get_mods() & MOD_BIT(KC_RALT))
 
+int last_mode;
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     static uint32_t key_timer;
+
+    uprintf("Pressed %d %d\n", keycode, record->event.pressed);
+    switch (keycode)
+    {
+    case KC_CAPS:
+        if(record->event.pressed) {
+           last_mode = rgb_matrix_get_mode();
+           rgb_matrix_mode(RGB_MATRIX_CUSTOM_shortcuts_cheatsheet);
+        } else {
+            rgb_matrix_mode(last_mode);
+        }
+        /* code */
+        break;
+
+    default:
+        break;
+    }
 
     static struct {
         bool on;
@@ -133,8 +152,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         /* z e s t y   m e m e s */
         case WIDETXT:
             if (record->event.pressed) {
-                w_i_d_e_t_e_x_t.on = !w_i_d_e_t_e_x_t.on;
-                w_i_d_e_t_e_x_t.first = true;
+                // w_i_d_e_t_e_x_t.on = !w_i_d_e_t_e_x_t.on;
+                // w_i_d_e_t_e_x_t.first = true;
+                rgb_matrix_mode(RGB_MATRIX_CUSTOM_reactive_gradient);
             }
             return false;
         case TAUNTXT:
@@ -198,4 +218,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         default:
             return true; //Process all other keycodes normally
     }
+}
+void keyboard_post_init_user(void) {
+  // Customise these values to desired behaviour
+  //debug_enable=true;
+  // debug_matrix=true;
+  //debug_keyboard=true
+  //debug_mouse=true;
 }
