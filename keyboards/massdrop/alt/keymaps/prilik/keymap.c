@@ -93,18 +93,45 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #define MODS_ALT   (get_mods() & MOD_BIT(KC_LALT)   || get_mods() & MOD_BIT(KC_RALT))
 
 int last_mode;
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     static uint32_t key_timer;
 
     uprintf("Pressed %d %d\n", keycode, record->event.pressed);
+
+    int mode = rgb_matrix_get_mode();
+    if (mode == RGB_MATRIX_CUSTOM_clear_tmp) {
+        rgb_matrix_mode(last_mode);
+    } else {
+        last_mode = mode;
+    }
+
+
     switch (keycode)
     {
     case KC_CAPS:
         if(record->event.pressed) {
-           last_mode = rgb_matrix_get_mode();
-           rgb_matrix_mode(RGB_MATRIX_CUSTOM_shortcuts_cheatsheet);
+           rgb_matrix_mode(RGB_MATRIX_CUSTOM_shortcuts_cheatsheet_ctrl);
         } else {
-            rgb_matrix_mode(last_mode);
+            rgb_matrix_mode(RGB_MATRIX_CUSTOM_clear_tmp);
+        }
+        /* code */
+        break;
+
+    case KC_LGUI:
+        if(record->event.pressed) {
+           rgb_matrix_mode(RGB_MATRIX_CUSTOM_shortcuts_cheatsheet_cmd);
+        } else {
+            rgb_matrix_mode(RGB_MATRIX_CUSTOM_clear_tmp);
+        }
+        /* code */
+        break;
+
+    case KC_LSHIFT:
+        if(record->event.pressed && last_mode == RGB_MATRIX_CUSTOM_shortcuts_cheatsheet_cmd) {
+           rgb_matrix_mode(RGB_MATRIX_CUSTOM_shortcuts_cheatsheet_cmd_shift);
+        } else {
+            rgb_matrix_mode(RGB_MATRIX_CUSTOM_clear_tmp);
         }
         /* code */
         break;

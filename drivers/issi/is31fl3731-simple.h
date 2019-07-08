@@ -34,6 +34,7 @@ void IS31FL3731_write_pwm_buffer(uint8_t addr, uint8_t *pwm_buffer);
 
 void IS31FL3731_set_value(int index, uint8_t value);
 void IS31FL3731_set_value_all(uint8_t value);
+int IS31FL3731_get_value(int index);
 
 void IS31FL3731_set_led_control_register(uint8_t index, bool value);
 

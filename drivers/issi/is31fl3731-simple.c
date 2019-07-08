@@ -209,6 +209,15 @@ void IS31FL3731_set_value(int index, uint8_t value) {
     }
 }
 
+uint8_t IS31FL3731_get_value(int index) {
+    if (index >= 0 && index < LED_DRIVER_LED_COUNT) {
+        is31_led led = g_is31_leds[index];
+
+        // Subtract 0x24 to get the second index of g_pwm_buffer
+        return g_pwm_buffer[led.driver][led.v - 0x24];
+    }
+}
+
 void IS31FL3731_set_value_all(uint8_t value) {
     for (int i = 0; i < LED_DRIVER_LED_COUNT; i++) {
         IS31FL3731_set_value(i, value);

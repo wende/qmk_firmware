@@ -1,39 +1,63 @@
 RGB_MATRIX_EFFECT(reactive_gradient)
 RGB_MATRIX_EFFECT(two_o_four_eight)
-RGB_MATRIX_EFFECT(shortcuts_cheatsheet)
+RGB_MATRIX_EFFECT(shortcuts_cheatsheet_ctrl)
+RGB_MATRIX_EFFECT(shortcuts_cheatsheet_cmd)
+RGB_MATRIX_EFFECT(shortcuts_cheatsheet_cmd_shift)
+RGB_MATRIX_EFFECT(clear_tmp)
+
 
 #ifdef RGB_MATRIX_CUSTOM_EFFECT_IMPLS
 
-#include "rgb_matrix.h"
+#    include "rgb_matrix.h"
 
-#include <math.h>
-#include <print.h>
+#    include <math.h>
+#    include <print.h>
 
-#define max(a, b) (((a) > (b)) ? (a) : (b))
-#define min(a, b) (((a) < (b)) ? (a) : (b))
-#define foreach(item, array) \
-    for(int keep = 1, \
-            count = 0,\
-            size = sizeof (array) / sizeof *(array); \
-        keep && count != size; \
-        keep = !keep, count++) \
-      for(item = (array) + count; keep; keep = !keep)
+#    define max(a, b) (((a) > (b)) ? (a) : (b))
+#    define min(a, b) (((a) < (b)) ? (a) : (b))
+#    define foreach(item, array)                                                                                            \
+        for (int keep = 1, count = 0, size = sizeof(array) / sizeof *(array); keep && count != size; keep = !keep, count++) \
+            for (item = (array) + count; keep; keep = !keep)
 
 /*---------------------------------  Outrun  ---------------------------------*/
-enum KEEB {
-    K_ESC = 0, K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9, K_0, K_HYPHEN, K_EQL, K_BSP, K_DEL,
-    K_TAB, K_Q, K_W, K_E, K_R, K_T, K_Y, K_U, K_I, K_O, K_P, K_LBRACKET, K_RBRACKET, K_BACKSLASH, K_HOME,
-    K_CPSL, K_A, K_S, K_D, K_F, K_G, K_H, K_J, K_K, K_L, K_SEMICOLON, K_GRAVE, K_RET, K_PGUP,
-    K_L_SHIFT, K_Z, K_X, K_C, K_V, K_B, K_N, K_M, K_COMMA, K_DOT, K_SLASH, K_R_SHIFT, K_ARROW_UP, K_PGDN,
-    K_L_CTRL, K_L_ALT, K_L_META, K_SPC, K_R_ALT, K_FN, K_ARROW_LEFT, K_ARROW_DOWN, K_ARROW_RIGHT, FIRST_LED
-};
+enum KEEB { K_ESC = 0, K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9, K_0, K_HYPHEN, K_EQL, K_BSP, K_DEL, K_TAB, K_Q, K_W, K_E, K_R, K_T, K_Y, K_U, K_I, K_O, K_P, K_LBRACKET, K_RBRACKET, K_BACKSLASH, K_HOME, K_CPSL, K_A, K_S, K_D, K_F, K_G, K_H, K_J, K_K, K_L, K_SEMICOLON, K_GRAVE, K_RET, K_PGUP, K_L_SHIFT, K_Z, K_X, K_C, K_V, K_B, K_N, K_M, K_COMMA, K_DOT, K_SLASH, K_R_SHIFT, K_ARROW_UP, K_PGDN, K_L_CTRL, K_L_ALT, K_L_META, K_SPC, K_R_ALT, K_FN, K_ARROW_LEFT, K_ARROW_DOWN, K_ARROW_RIGHT, FIRST_LED };
 uint8_t LAST_LED = FIRST_LED + 37;
 
-uint8_t i = 0;
+uint8_t i      = 0;
 uint8_t myTick = 0;
 
-static uint8_t get_last_key(void){
-    return g_last_hit_tracker.index[g_last_hit_tracker.count - 1];
+static uint8_t get_last_key(void) { return g_last_hit_tracker.index[g_last_hit_tracker.count - 1]; }
+
+typedef struct rgb_led {
+    uint8_t id;
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+} rgb_led_t;
+
+typedef struct list {
+    rgb_led_t    val;
+    struct list* next;
+} list_t;
+
+struct list * original_leds;
+
+void tmp_rgb(uint8_t id, uint8_t red, uint8_t green, uint8_t blue) {
+
+    rgb_led_t led = {.id = id, .r = red, .g = green, .b = blue};
+
+    rgb_matrix_set_color(LAST_LED, 0, 0, 255);
+    list_t new_original = (list_t){.val = led, .next = original_leds};
+    original_leds       = &new_original;
+}
+
+bool clear_tmp(effect_params_t* params) {
+    // do {
+    //    rgb_led_t led = original_leds->val;
+    //    rgb_matrix_set_color(led.id, led.r, led.g, led.b);
+    //    original_leds = original_leds->next;
+    // } while ( original_leds == NULL);
+    return false;
 }
 
 // bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -44,7 +68,7 @@ static uint8_t get_last_key(void){
 static bool two_o_four_eight(effect_params_t* params) {
     RGB_MATRIX_USE_LIMITS(led_min, led_max);
     myTick += 1;
-    if(myTick % 64 == 0) {
+    if (myTick % 64 == 0) {
         i = i + 1;
         uprintf("%d\n", get_last_key());
         rgb_matrix_set_color(i, 255, 0, 0);
@@ -55,75 +79,85 @@ static bool two_o_four_eight(effect_params_t* params) {
 }
 
 /*----------------------------------  Shortcut Cheatsheet  ---------------------------------*/
-static bool shortcuts_cheatsheet(effect_params_t* params) {
-    int keys[] = { K_E, K_A, K_K, K_H, K_D };
-    foreach(int *key, keys){
+static bool shortcuts_cheatsheet_ctrl(effect_params_t* params) {
+    int keys[] = {K_E, K_A, K_K, K_H, K_D, K_Y, K_T};
+    foreach (int* key, keys) {
         uprintf("%d\n", *key);
-        rgb_matrix_set_color(*key, 0, 255, 0);
+        rgb_matrix_set_color(*key, 0, 0, 255);
+    };
+    return false;
+}
+static bool shortcuts_cheatsheet_cmd(effect_params_t* params) {
+    int keys[] = {K_S, K_F, K_A, K_W, K_D};
+    foreach (int* key, keys) {
+        uprintf("%d\n", *key);
+        rgb_matrix_set_color(*key, 0, 0, 255);
+    };
+    return false;
+}
+static bool shortcuts_cheatsheet_cmd_shift(effect_params_t* params) {
+    int keys[] = {K_G, K_H, K_R, K_T, K_V};
+    foreach (int* key, keys) {
+        uprintf("%d\n", *key);
+        rgb_matrix_set_color(*key, 0, 0, 255);
     };
     return false;
 }
 
 /*----------------------------------  Reactive Gradient  ---------------------------------*/
 
-const uint8_t FADEOUT_SPEED = 120; // personal preference
+const uint8_t FADEOUT_SPEED = 120;  // personal preference
 
 static bool reactive_gradient(effect_params_t* params) {
-  RGB_MATRIX_USE_LIMITS(led_min, led_max);
+    RGB_MATRIX_USE_LIMITS(led_min, led_max);
 
 
+    const uint16_t max_tick = 65535 / FADEOUT_SPEED;
 
-  const uint16_t max_tick = 65535 / FADEOUT_SPEED;
+    // print("string");
+    // calculate target color
+    const HSV hsv       = {rgb_matrix_config.hue + 80, rgb_matrix_config.sat, rgb_matrix_config.val};
+    const RGB highlight = hsv_to_rgb(hsv);
 
-   // print("string");
-  // calculate target color
-  const HSV hsv = {
-    rgb_matrix_config.hue + 80,
-    rgb_matrix_config.sat,
-    rgb_matrix_config.val
-  };
-  const RGB highlight = hsv_to_rgb(hsv);
+    // Relies on hue being 8-bit and wrapping
+    for (uint8_t i = led_min; i < led_max; i++) {
+        // get gradient color
+        // const rgb_led led = g_rgb_leds[i];
+        // uint8_t hue = rgb_matrix_config.hue;
 
-  // Relies on hue being 8-bit and wrapping
-  for (uint8_t i = led_min; i < led_max; i++) {
-    // get gradient color
-    // const rgb_led led = g_rgb_leds[i];
-    // uint8_t hue = rgb_matrix_config.hue;
+        // if (led.matrix_co.raw != 0xFF) {
+        //   // Keys
+        //   //hue; //10 * led.matrix_co.row;
+        // } else {
+        //   // Underglow (same color as last row of keys)
+        //   //hue; //+= 10 * (MATRIX_ROWS - 1);
+        // }
 
-    // if (led.matrix_co.raw != 0xFF) {
-    //   // Keys
-    //   //hue; //10 * led.matrix_co.row;
-    // } else {
-    //   // Underglow (same color as last row of keys)
-    //   //hue; //+= 10 * (MATRIX_ROWS - 1);
-    // }
+        HSV hsv = {0xFF, 0x00, rgb_matrix_config.val / 2};
+        RGB rgb = hsv_to_rgb(hsv);
 
-    HSV hsv = { 0xFF, 0x00, rgb_matrix_config.val / 2 };
-    RGB rgb = hsv_to_rgb(hsv);
+        // checks if key has been hit
+        uint16_t tick = 0xffff;
+        for (uint8_t j = g_last_hit_tracker.count; j > 0; j--) {
+            if (g_last_hit_tracker.index[j - 1] == i) {
+                tick = g_last_hit_tracker.tick[j - 1];
+                break;
+            }
+        }
+        // scale the tick down based on fadeout preferences
+        tick = scale16by8(tick, FADEOUT_SPEED);
+        // Linear interpolate through RGB space
+        if (tick < max_tick) {
+            float pct = tick / (float)max_tick;
+            rgb.r     = highlight.r - pct * (highlight.r - rgb.r);
+            rgb.g     = highlight.g - pct * (highlight.g - rgb.g);
+            rgb.b     = highlight.b - pct * (highlight.b - rgb.b);
+        }
 
-    // checks if key has been hit
-    uint16_t tick = 0xffff;
-    for(uint8_t j = g_last_hit_tracker.count; j > 0; j--) {
-      if (g_last_hit_tracker.index[j - 1] == i) {
-        tick = g_last_hit_tracker.tick[j - 1];
-        uprintf("%d\n", tick);
-        break;
-      }
-    }
-    // scale the tick down based on fadeout preferences
-    tick = scale16by8(tick, FADEOUT_SPEED);
-    // Linear interpolate through RGB space
-    if (tick < max_tick) {
-      float pct = tick / (float)max_tick;
-      rgb.r = highlight.r - pct * (highlight.r - rgb.r);
-      rgb.g = highlight.g - pct * (highlight.g - rgb.g);
-      rgb.b = highlight.b - pct * (highlight.b - rgb.b);
+        rgb_matrix_set_color(i, rgb.r, rgb.b, rgb.b);
     }
 
-    rgb_matrix_set_color(i, rgb.r, rgb.b, rgb.b);
-  }
-
-  return led_max < DRIVER_LED_TOTAL;
+    return led_max < DRIVER_LED_TOTAL;
 }
 
 /*----------------------------------  Snake  ---------------------------------*/
@@ -295,4 +329,6 @@ static bool reactive_gradient(effect_params_t* params) {
 //   else snk_run(params);
 // }
 
-#endif // RGB_MATRIX_CUSTOM_EFFECT_IMPLS
+//
+
+#endif  // RGB_MATRIX_CUSTOM_EFFECT_IMPLS
