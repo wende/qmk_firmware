@@ -77,7 +77,7 @@ bool process_leader(uint16_t keycode, keyrecord_t *record) {
     } else {
       if(awaiting_leader_release) {
         qk_leader_start();
-        return true;
+        return false;
       }
     }
   }
