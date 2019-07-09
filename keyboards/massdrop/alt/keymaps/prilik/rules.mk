@@ -27,3 +27,4 @@ COMMAND_ENABLE = no         # Commands for debug and configuration
 NKRO_ENABLE = yes           # USB Nkey Rollover
 VIRTSER_ENABLE = yes         # USB Serial Driver
 RAW_ENABLE = no             # Raw device
+LEADER_ENABLE = yes

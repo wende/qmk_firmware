@@ -4,6 +4,7 @@ RGB_MATRIX_EFFECT(shortcuts_cheatsheet_ctrl)
 RGB_MATRIX_EFFECT(shortcuts_cheatsheet_cmd)
 RGB_MATRIX_EFFECT(shortcuts_cheatsheet_cmd_shift)
 RGB_MATRIX_EFFECT(clear_tmp)
+RGB_MATRIX_EFFECT(leader_key)
 
 
 #ifdef RGB_MATRIX_CUSTOM_EFFECT_IMPLS
@@ -26,7 +27,7 @@ uint8_t LAST_LED = FIRST_LED + 37;
 uint8_t i      = 0;
 uint8_t myTick = 0;
 
-static uint8_t get_last_key(void) { return g_last_hit_tracker.index[g_last_hit_tracker.count - 1]; }
+// static uint8_t get_last_key(void) { return g_last_hit_tracker.index[g_last_hit_tracker.count - 1]; }
 
 typedef struct rgb_led {
     uint8_t id;
@@ -41,6 +42,8 @@ typedef struct list {
 } list_t;
 
 struct list * original_leds;
+
+
 
 void tmp_rgb(uint8_t id, uint8_t red, uint8_t green, uint8_t blue) {
 
@@ -65,12 +68,19 @@ bool clear_tmp(effect_params_t* params) {
 //     return true;
 // }
 
+static bool leader_key(effect_params_t* params) {
+  if (params->init) {
+    rgb_matrix_set_color_all(RGB_ORANGE);
+  }
+  rgb_matrix_set_color_all(RGB_ORANGE);
+  return false;
+};
+
 static bool two_o_four_eight(effect_params_t* params) {
     RGB_MATRIX_USE_LIMITS(led_min, led_max);
     myTick += 1;
     if (myTick % 64 == 0) {
         i = i + 1;
-        uprintf("%d\n", get_last_key());
         rgb_matrix_set_color(i, 255, 0, 0);
     }
     rgb_matrix_set_color(FIRST_LED, 0, 0, 255);
@@ -82,7 +92,6 @@ static bool two_o_four_eight(effect_params_t* params) {
 static bool shortcuts_cheatsheet_ctrl(effect_params_t* params) {
     int keys[] = {K_E, K_A, K_K, K_H, K_D, K_Y, K_T};
     foreach (int* key, keys) {
-        uprintf("%d\n", *key);
         rgb_matrix_set_color(*key, 0, 0, 255);
     };
     return false;
@@ -90,7 +99,6 @@ static bool shortcuts_cheatsheet_ctrl(effect_params_t* params) {
 static bool shortcuts_cheatsheet_cmd(effect_params_t* params) {
     int keys[] = {K_S, K_F, K_A, K_W, K_D};
     foreach (int* key, keys) {
-        uprintf("%d\n", *key);
         rgb_matrix_set_color(*key, 0, 0, 255);
     };
     return false;
@@ -98,7 +106,6 @@ static bool shortcuts_cheatsheet_cmd(effect_params_t* params) {
 static bool shortcuts_cheatsheet_cmd_shift(effect_params_t* params) {
     int keys[] = {K_G, K_H, K_R, K_T, K_V};
     foreach (int* key, keys) {
-        uprintf("%d\n", *key);
         rgb_matrix_set_color(*key, 0, 0, 255);
     };
     return false;

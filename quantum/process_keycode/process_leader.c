@@ -17,6 +17,7 @@
 #ifdef LEADER_ENABLE
 
 #include "process_leader.h"
+#include <print.h>
 
 #ifndef LEADER_TIMEOUT
   #define LEADER_TIMEOUT 300
@@ -48,9 +49,12 @@ void qk_leader_start(void) {
   leader_sequence[4] = 0;
 }
 
+bool awaiting_leader_release = false;
 bool process_leader(uint16_t keycode, keyrecord_t *record) {
   // Leader key set-up
+
   if (record->event.pressed) {
+    awaiting_leader_release = false;
     if (leading) {
       if (timer_elapsed(leader_time) < LEADER_TIMEOUT) {
 #ifndef LEADER_KEY_STRICT_KEY_PROCESSING
@@ -65,9 +69,15 @@ bool process_leader(uint16_t keycode, keyrecord_t *record) {
 #endif
         return false;
       }
+    }
+  }
+  if (keycode == KC_LEAD || keycode == 28951 ) {
+    if(record->event.pressed) {
+      awaiting_leader_release = true;
     } else {
-      if (keycode == KC_LEAD) {
+      if(awaiting_leader_release) {
         qk_leader_start();
+        return true;
       }
     }
   }
