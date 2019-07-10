@@ -31,6 +31,7 @@ void leader_end(void) {}
 
 // Leader key stuff
 bool leading = false;
+bool instant_break = false;
 uint16_t leader_time = 0;
 
 uint16_t leader_sequence[5] = {0, 0, 0, 0, 0};
@@ -40,6 +41,7 @@ void qk_leader_start(void) {
   if (leading) { return; }
   leader_start();
   leading = true;
+  instant_break = false;
   leader_time = timer_read();
   leader_sequence_size = 0;
   leader_sequence[0] = 0;
@@ -48,6 +50,7 @@ void qk_leader_start(void) {
   leader_sequence[3] = 0;
   leader_sequence[4] = 0;
 }
+
 
 bool awaiting_leader_release = false;
 bool process_leader(uint16_t keycode, keyrecord_t *record) {
@@ -61,12 +64,14 @@ bool process_leader(uint16_t keycode, keyrecord_t *record) {
         if ((keycode >= QK_MOD_TAP && keycode <= QK_MOD_TAP_MAX) || (keycode >= QK_LAYER_TAP && keycode <= QK_LAYER_TAP_MAX)) {
           keycode = keycode & 0xFF;
         }
-#endif // LEADER_KEY_STRICT_KEY_PROCESSING
-        leader_sequence[leader_sequence_size] = keycode;
-        leader_sequence_size++;
+#endif // LEADER_KEY_STRICT_KE
+        if(leader_sequence_size < 5) {
+          leader_sequence[leader_sequence_size] = keycode;
+          leader_sequence_size++;
 #ifdef LEADER_PER_KEY_TIMING
-        leader_time = timer_read();
+          leader_time = timer_read();
 #endif
+        }
         return false;
       }
     }
@@ -75,10 +80,11 @@ bool process_leader(uint16_t keycode, keyrecord_t *record) {
     if(record->event.pressed) {
       awaiting_leader_release = true;
     } else {
-      if(awaiting_leader_release) {
+      if (awaiting_leader_release) {
         qk_leader_start();
         return false;
       }
+
     }
   }
   return true;

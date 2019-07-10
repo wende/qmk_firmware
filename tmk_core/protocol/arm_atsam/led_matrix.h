@@ -83,6 +83,8 @@ extern uint8_t gcr_desired;
 extern uint8_t gcr_breathe;
 extern uint8_t gcr_actual;
 extern uint8_t gcr_actual_last;
+extern RGB led_buffer[ISSI3733_LED_COUNT];
+
 
 void gcr_compute(void);
 

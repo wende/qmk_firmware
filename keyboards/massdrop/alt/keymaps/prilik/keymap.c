@@ -1,6 +1,7 @@
 #include QMK_KEYBOARD_H
 #include "process_unicode.h"
 #include <print.h>
+# define array_eq(a, b) (memcmp(a, b, sizeof(a)) == 0)
 
 enum alt_keycodes {
     U_T_AUTO = SAFE_RANGE, //USB Extra Port Toggle Auto Detect / Always Active
@@ -58,11 +59,11 @@ keymap_config_t keymap_config;
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_QWERTY] = LAYOUT(
-        KC_LEAD,            KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,  \
-        KC_TAB,             KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC, KC_BSLS, KC_HOME, \
-        RCTL_T(KC_LEAD),    KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,          KC_ENT,  KC_PGUP, \
-        LSFT_T(KC_GRV),     KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,          KC_UP,   KC_PGDN, \
-        KC_LCTL,            KC_LALT, KC_LGUI,                            KC_SPC,                             KC_RALT, MO(1),   KC_LEFT, KC_DOWN, KC_RGHT  \
+        KC_LEAD,               KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,  \
+        KC_TAB,                KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC, KC_BSLS, KC_HOME, \
+        LCTL_T(TG(_VIM_BASE)), KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,          KC_ENT,  KC_PGUP, \
+        LSFT_T(KC_GRV),        KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,          KC_UP,   KC_PGDN, \
+        KC_LCTL,               KC_LALT, KC_LGUI,                            KC_SPC,                             KC_RALT, MO(1),   KC_LEFT, KC_DOWN, KC_RGHT  \
     ),
     [_ACTIONS] = LAYOUT(
         KC_GRV,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______, KC_MUTE, \
@@ -79,9 +80,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         UC_M_OS, UC_M_WC, UC_M_LN,                            WIDETXT,                            ___X___, ___X___, ___X___, ___X___, ___X___  \
     ),
     [_VIM_BASE] = LAYOUT(
-        _______,    _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, \
+        KC_W,    _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, \
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, \
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, _______, \
+        LCTL_T(TG(_VIM_BASE)), _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, _______, \
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, _______, \
         _______, _______, _______,                            _______,                            _______, _______, _______, _______, _______  \
     ),
@@ -96,9 +97,32 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     */
 };
 
+uint32_t layer_state_set_user(uint32_t state) {
+    uprintf("Setting layer %d", state);
+    // switch (biton32(state)) {
+    // case _RAISE:
+    //     rgblight_setrgb (0x00,  0x00, 0xFF);
+    //     break;
+    // case _LOWER:
+    //     rgblight_setrgb (0xFF,  0x00, 0x00);
+    //     break;
+    // case _PLOVER:
+    //     rgblight_setrgb (0x00,  0xFF, 0x00);
+    //     break;
+    // case _ADJUST:
+    //     rgblight_setrgb (0x7A,  0x00, 0xFF);
+    //     break;
+    // default: //  for any other layers, or the default layer
+    //     rgblight_setrgb (0x00,  0xFF, 0xFF);
+    //     break;
+    // }
+  return state;
+}
+
 #define MODS_SHIFT (get_mods() & MOD_BIT(KC_LSHIFT) || get_mods() & MOD_BIT(KC_RSHIFT))
 #define MODS_CTRL  (get_mods() & MOD_BIT(KC_LCTL)   || get_mods() & MOD_BIT(KC_RCTRL))
 #define MODS_ALT   (get_mods() & MOD_BIT(KC_LALT)   || get_mods() & MOD_BIT(KC_RALT))
+#define MODS_GUI   (get_mods() & MOD_BIT(KC_LGUI)   || get_mods() & MOD_BIT(KC_RGUI))
 
 LEADER_EXTERNS();
 void matrix_scan_user(void) {
@@ -123,69 +147,28 @@ void matrix_scan_user(void) {
     }
     SEQ_ONE_KEY(KC_W) {
         SEND_STRING("WENDE");
+        instant_break = true;
     }
   }
 }
 
-int pre_leader_mode;
+
+
+int default_rgb_mode;
 void leader_start(void) {
-  pre_leader_mode = rgb_matrix_get_mode();
   rgb_matrix_mode(RGB_MATRIX_CUSTOM_leader_key);
   //rgb_matrix_set_mode(RGB_MATRIX_CUSTOM_vim_mode)
 }
 void leader_end(void) {
-  uprintf("LEADER END");
-  rgb_matrix_mode(pre_leader_mode);
+  rgb_matrix_mode(default_rgb_mode);
   // Add your code to run when a leader key sequence ends here
 }
 
-int last_mode;
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     static uint32_t key_timer;
 
-    uprintf("Pressed %d %d\n", keycode, record->event.pressed);
+    uprintf("%d %d %d\n", MODS_CTRL, MODS_SHIFT, MODS_GUI);
 
-    int mode = rgb_matrix_get_mode();
-    if (mode == RGB_MATRIX_CUSTOM_clear_tmp) {
-        rgb_matrix_mode(last_mode);
-    } else {
-        last_mode = mode;
-    }
-    uprintf("%d", last_mode);
-
-
-    switch (keycode)
-    {
-    case KC_CAPS:
-        if(record->event.pressed) {
-           rgb_matrix_mode(RGB_MATRIX_CUSTOM_shortcuts_cheatsheet_ctrl);
-        } else {
-            rgb_matrix_mode(RGB_MATRIX_CUSTOM_clear_tmp);
-        }
-        /* code */
-        break;
-
-    case KC_LGUI:
-        if(record->event.pressed) {
-           rgb_matrix_mode(RGB_MATRIX_CUSTOM_shortcuts_cheatsheet_cmd);
-        } else {
-            rgb_matrix_mode(RGB_MATRIX_CUSTOM_clear_tmp);
-        }
-        /* code */
-        break;
-
-    case KC_LSHIFT:
-        if(record->event.pressed && last_mode == RGB_MATRIX_CUSTOM_shortcuts_cheatsheet_cmd) {
-           rgb_matrix_mode(RGB_MATRIX_CUSTOM_shortcuts_cheatsheet_cmd_shift);
-        } else {
-            rgb_matrix_mode(RGB_MATRIX_CUSTOM_clear_tmp);
-        }
-        /* code */
-        break;
-
-    default:
-        break;
-    }
 
     static struct {
         bool on;
@@ -226,9 +209,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         /* z e s t y   m e m e s */
         case WIDETXT:
             if (record->event.pressed) {
-                // w_i_d_e_t_e_x_t.on = !w_i_d_e_t_e_x_t.on;
-                // w_i_d_e_t_e_x_t.first = true;
-                rgb_matrix_mode(RGB_MATRIX_CUSTOM_reactive_gradient);
+                w_i_d_e_t_e_x_t.on = !w_i_d_e_t_e_x_t.on;
+                w_i_d_e_t_e_x_t.first = true;
             }
             return false;
         case TAUNTXT:
@@ -248,7 +230,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 send_unicode_hex_string("00AF 005C 005F 0028 30C4 0029 005F 002F 00AF");
             }
             return false;
-
+        case RGB_RMOD:
+            if (record->event.pressed) {
+                default_rgb_mode = rgb_matrix_get_mode() - 1;
+            }
+            return true;
+        case RGB_MOD:
+            if (record->event.pressed) {
+                default_rgb_mode = rgb_matrix_get_mode() + 1;
+            }
+            return true;
         /* Massdrop debug */
         case U_T_AUTO:
             if (record->event.pressed && MODS_SHIFT && MODS_CTRL) {
