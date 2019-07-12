@@ -1,9 +1,11 @@
 #include QMK_KEYBOARD_H
 #include "process_unicode.h"
 #include <print.h>
+# include "rgblight.h"
 # define array_eq(a, b) (memcmp(a, b, sizeof(a)) == 0)
 
 enum alt_keycodes {
+
     U_T_AUTO = SAFE_RANGE, //USB Extra Port Toggle Auto Detect / Always Active
     U_T_AGCR,              //USB Toggle Automatic GCR control
     DBG_TOG,               //DEBUG Toggle On / Off
@@ -12,6 +14,7 @@ enum alt_keycodes {
     DBG_MOU,               //DEBUG Toggle Mouse Prints
     MD_BOOT,               //Restart into bootloader after hold timeout
 
+    C_OR_NORM,
     WIDETXT, // w i d e t e x t   f o r   a   w i d e   b o y
     TAUNTXT, // FoR ThE UlTiMaTe sHiTpOsTiNg eXpErIeNcE
 
@@ -25,6 +28,14 @@ enum alt_keycodes {
 #define UC_THNK X(E_THNK) // thinking    - 🤔
 #define UC_UGHH X(E_UGHH) // UGHHHHH     - 😩
 };
+
+
+#define MODS_SHIFT (get_mods() & MOD_BIT(KC_LSHIFT) || get_mods() & MOD_BIT(KC_RSHIFT))
+#define MODS_CTRL  (get_mods() & MOD_BIT(KC_LCTL)   || get_mods() & MOD_BIT(KC_RCTRL))
+#define MODS_ALT   (get_mods() & MOD_BIT(KC_LALT)   || get_mods() & MOD_BIT(KC_RALT))
+#define SET_INSERT_MODE_COLOR() rgb_matrix_sethsv(HSV_CYAN)
+#define SET_NORMAL_MODE_COLOR() rgb_matrix_sethsv(HSV_ORANGE)
+#define SET_LEAD_MODE_COLOR() rgb_matrix_sethsv(HSV_PURPLE)
 
 enum unicode_names {
     E_100,
@@ -47,9 +58,9 @@ const uint32_t PROGMEM unicode_map[] = {
 
 enum alt_layers {
     _QWERTY,
+    _VIM_BASE,
     _ACTIONS,
     _MEMES,
-    _VIM_BASE,
 };
 
 #define TG_NKRO MAGIC_TOGGLE_NKRO //Toggle 6KRO / NKRO mode
@@ -59,11 +70,18 @@ keymap_config_t keymap_config;
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_QWERTY] = LAYOUT(
-        KC_LEAD,               KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,  \
+        KC_ESC,               KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,  \
         KC_TAB,                KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC, KC_BSLS, KC_HOME, \
-        LCTL_T(TG(_VIM_BASE)), KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,          KC_ENT,  KC_PGUP, \
+        C_OR_NORM,             KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,          KC_ENT,  KC_PGUP, \
         LSFT_T(KC_GRV),        KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,          KC_UP,   KC_PGDN, \
-        KC_LCTL,               KC_LALT, KC_LGUI,                            KC_SPC,                             KC_RALT, MO(1),   KC_LEFT, KC_DOWN, KC_RGHT  \
+        KC_LCTL,               KC_LALT, KC_LGUI,                            KC_SPC,                             KC_RALT, MO(_ACTIONS),   KC_LEFT, KC_DOWN, KC_RGHT  \
+    ),
+    [_VIM_BASE] = LAYOUT(
+        KC_ESC,  _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, \
+        _______, _______, _______, _______, _______, _______, _______, _______, TG(_VIM_BASE), _______, _______, _______, _______, _______, _______, \
+        KC_TRNS, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, _______, \
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, _______, \
+        _______, _______, _______,                            KC_LEAD,                            _______, MO(_ACTIONS), _______, _______, _______  \
     ),
     [_ACTIONS] = LAYOUT(
         KC_GRV,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______, KC_MUTE, \
@@ -79,13 +97,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         ___X___, ___X___, ___X___, UC_CLAP, ___X___, UC_BBB,  ___X___, ___X___, ___X___, ___X___, UC_HELP, ___X___,          ___X___, ___X___, \
         UC_M_OS, UC_M_WC, UC_M_LN,                            WIDETXT,                            ___X___, ___X___, ___X___, ___X___, ___X___  \
     ),
-    [_VIM_BASE] = LAYOUT(
-        KC_W,    _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, \
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, \
-        LCTL_T(TG(_VIM_BASE)), _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, _______, \
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, _______, \
-        _______, _______, _______,                            _______,                            _______, _______, _______, _______, _______  \
-    ),
+
     /*
     [X] = LAYOUT(
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, \
@@ -97,9 +109,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     */
 };
 
+int last_non_vim_hue;
 uint32_t layer_state_set_user(uint32_t state) {
-    uprintf("Setting layer %d", state);
-    // switch (biton32(state)) {
+
+    uprintf("Setting layer %d", biton32(state));
+    switch (biton32(state)) {
+        case _VIM_BASE:
+            SET_NORMAL_MODE_COLOR();
+            break;
+
     // case _RAISE:
     //     rgblight_setrgb (0x00,  0x00, 0xFF);
     //     break;
@@ -112,17 +130,17 @@ uint32_t layer_state_set_user(uint32_t state) {
     // case _ADJUST:
     //     rgblight_setrgb (0x7A,  0x00, 0xFF);
     //     break;
-    // default: //  for any other layers, or the default layer
-    //     rgblight_setrgb (0x00,  0xFF, 0xFF);
-    //     break;
-    // }
+        default:
+            SET_INSERT_MODE_COLOR();
+            break;
+    }
   return state;
 }
 
-#define MODS_SHIFT (get_mods() & MOD_BIT(KC_LSHIFT) || get_mods() & MOD_BIT(KC_RSHIFT))
-#define MODS_CTRL  (get_mods() & MOD_BIT(KC_LCTL)   || get_mods() & MOD_BIT(KC_RCTRL))
-#define MODS_ALT   (get_mods() & MOD_BIT(KC_LALT)   || get_mods() & MOD_BIT(KC_RALT))
-#define MODS_GUI   (get_mods() & MOD_BIT(KC_LGUI)   || get_mods() & MOD_BIT(KC_RGUI))
+
+void keyboard_post_init_user(void) {
+  SET_INSERT_MODE_COLOR();
+}
 
 LEADER_EXTERNS();
 void matrix_scan_user(void) {
@@ -130,17 +148,12 @@ void matrix_scan_user(void) {
   LEADER_DICTIONARY() {
     leading = false;
     leader_end();
-    // Replace the sequences below with your own sequences.
-    SEQ_ONE_KEY(KC_Q) {
-        SEQ_ONE_KEY(KC_W){
-            SEND_STRING("WOOHOO");
-        }
-
-      // When I press KC_LEAD and then T, this sends CTRL + SHIFT + T
-      SEND_STRING(SS_LCTRL(SS_LSFT("t")));
+    // Re(place the sequences below with your own sequences.
+    SEQ_TWO_KEYS(KC_A, KC_T) {
+        SEND_STRING(SS_LSFT(SS_LCMD("g")));
     }
     // Note: This is not an array, you don't need to put any commas
-    // or semicolons between sequences.
+    // or semolons between sequences.
     SEQ_TWO_KEYS(KC_N, KC_T) {
       // When I press KC_LEAD and then N followed by T, this sends CTRL + T
       SEND_STRING(SS_LCTRL("t"));
@@ -156,19 +169,80 @@ void matrix_scan_user(void) {
 
 int default_rgb_mode;
 void leader_start(void) {
-  rgb_matrix_mode(RGB_MATRIX_CUSTOM_leader_key);
+  SET_LEAD_MODE_COLOR();
   //rgb_matrix_set_mode(RGB_MATRIX_CUSTOM_vim_mode)
 }
 void leader_end(void) {
-  rgb_matrix_mode(default_rgb_mode);
+   if (IS_LAYER_ON(_VIM_BASE)) {
+       SET_NORMAL_MODE_COLOR();
+   } else {
+       SET_INSERT_MODE_COLOR();
+   }
   // Add your code to run when a leader key sequence ends here
 }
 
+
+bool cmd_down = false;
+bool shift_down = false;
+bool ctrl_down = false;
+bool nothing_after_ctl = true;
+
+bool process_vim_keypress(uint16_t keycode, keyrecord_t *record) {
+    if(IS_LAYER_OFF(_VIM_BASE)) return true;
+    uprintf("layer on");
+    switch (keycode) {
+        case KC_E:
+            // TODO extract this line outside
+            if (record->event.pressed) {
+                register_code(KC_LALT);
+                tap_code(KC_RGHT);
+                unregister_code(KC_LALT);
+            }
+            return false;
+        default:
+            return true;
+    }
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if(!process_vim_keypress(keycode, record)) return false;
+    if(rgb_matrix_get_mode() != RGB_MATRIX_CUSTOM_leader_key) {
+        last_non_vim_hue = rgb_matrix_config.hue;
+    };
     static uint32_t key_timer;
+    if(record->event.pressed) nothing_after_ctl = false;
 
-    uprintf("%d %d %d\n", MODS_CTRL, MODS_SHIFT, MODS_GUI);
+    uprintf("%d\n", keycode);
+    switch (keycode) {
+        case LCTL_T(TG(_VIM_BASE)):
+        case KC_LCTRL:
+            ctrl_down = record->event.pressed;
+            break;
 
+        case KC_LGUI:
+            cmd_down = record->event.pressed;
+            break;
+
+        case LSFT_T(KC_GRV):
+        case KC_LSHIFT:
+            shift_down = record->event.pressed;
+            break;
+
+        default:
+            break;
+    }
+    if (cmd_down && shift_down) {
+        rgb_matrix_mode(RGB_MATRIX_CUSTOM_reactive_gradient);
+        rgb_matrix_mode(RGB_MATRIX_CUSTOM_shortcuts_cheatsheet_cmd_shift);
+    } else if (cmd_down) {
+        rgb_matrix_mode(RGB_MATRIX_CUSTOM_reactive_gradient);
+        rgb_matrix_mode(RGB_MATRIX_CUSTOM_shortcuts_cheatsheet_cmd);
+    } else if (ctrl_down) {
+        rgb_matrix_mode(RGB_MATRIX_CUSTOM_reactive_gradient);
+        rgb_matrix_mode(RGB_MATRIX_CUSTOM_shortcuts_cheatsheet_ctrl);
+    } else {
+        rgb_matrix_mode(RGB_MATRIX_CUSTOM_reactive_gradient);
+    }
 
     static struct {
         bool on;
@@ -206,6 +280,33 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 
     switch (keycode) {
+        case KC_G:
+            if(MODS_CTRL && record->event.pressed) {
+                unregister_code(KC_LCTL);
+                tap_code(KC_ESC);
+                register_code(KC_LCTL);
+                return false;
+            }
+        case KC_SPC:
+            if(MODS_CTRL && record->event.pressed) {
+                process_leader(KC_LEAD, record);
+                return false;
+            }
+            return true;
+
+        case C_OR_NORM:
+            uprintf("C_OR_NORM");
+            if (record->event.pressed) {
+                register_code(KC_LCTL);
+                nothing_after_ctl = true;
+            } else {
+                // TODO add a timeout so that when held to long it doesn't switch layer anyway
+                if(nothing_after_ctl) {
+                    layer_invert(_VIM_BASE);
+                }
+                unregister_code(KC_LCTL);
+            }
+            return false;
         /* z e s t y   m e m e s */
         case WIDETXT:
             if (record->event.pressed) {
@@ -284,10 +385,4 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return true; //Process all other keycodes normally
     }
 }
-void keyboard_post_init_user(void) {
-  // Customise these values to desired behaviour
-  //debug_enable=true;
-  // debug_matrix=true;
-  //debug_keyboard=true
-  //debug_mouse=true;
-}
+

@@ -16,78 +16,77 @@
 
 #ifdef LEADER_ENABLE
 
-#include "process_leader.h"
-#include <print.h>
+#    include "process_leader.h"
+#    include <print.h>
 
-#ifndef LEADER_TIMEOUT
-  #define LEADER_TIMEOUT 300
-#endif
+#    ifndef LEADER_TIMEOUT
+#        define LEADER_TIMEOUT 300
+#    endif
 
-__attribute__ ((weak))
-void leader_start(void) {}
+__attribute__((weak)) void leader_start(void) {}
 
-__attribute__ ((weak))
-void leader_end(void) {}
+__attribute__((weak)) void leader_end(void) {}
 
 // Leader key stuff
-bool leading = false;
-bool instant_break = false;
-uint16_t leader_time = 0;
+bool     leading       = false;
+bool     instant_break = false;
+uint16_t leader_time   = 0;
 
-uint16_t leader_sequence[5] = {0, 0, 0, 0, 0};
-uint8_t leader_sequence_size = 0;
+uint16_t leader_sequence[5]   = {0, 0, 0, 0, 0};
+uint8_t  leader_sequence_size = 0;
 
 void qk_leader_start(void) {
-  if (leading) { return; }
-  leader_start();
-  leading = true;
-  instant_break = false;
-  leader_time = timer_read();
-  leader_sequence_size = 0;
-  leader_sequence[0] = 0;
-  leader_sequence[1] = 0;
-  leader_sequence[2] = 0;
-  leader_sequence[3] = 0;
-  leader_sequence[4] = 0;
+    if (leading) {
+        return;
+    }
+    leader_start();
+    leading              = true;
+    instant_break        = false;
+    leader_time          = timer_read();
+    leader_sequence_size = 0;
+    leader_sequence[0]   = 0;
+    leader_sequence[1]   = 0;
+    leader_sequence[2]   = 0;
+    leader_sequence[3]   = 0;
+    leader_sequence[4]   = 0;
 }
-
 
 bool awaiting_leader_release = false;
 bool process_leader(uint16_t keycode, keyrecord_t *record) {
-  // Leader key set-up
+    // Leader key set-up
 
-  if (record->event.pressed) {
-    awaiting_leader_release = false;
-    if (leading) {
-      if (timer_elapsed(leader_time) < LEADER_TIMEOUT) {
-#ifndef LEADER_KEY_STRICT_KEY_PROCESSING
-        if ((keycode >= QK_MOD_TAP && keycode <= QK_MOD_TAP_MAX) || (keycode >= QK_LAYER_TAP && keycode <= QK_LAYER_TAP_MAX)) {
-          keycode = keycode & 0xFF;
+    if (record->event.pressed) {
+        awaiting_leader_release = false;
+        if (leading) {
+            if (timer_elapsed(leader_time) < LEADER_TIMEOUT) {
+#    ifndef LEADER_KEY_STRICT_KEY_PROCESSING
+                if ((keycode >= QK_MOD_TAP && keycode <= QK_MOD_TAP_MAX) || (keycode >= QK_LAYER_TAP && keycode <= QK_LAYER_TAP_MAX)) {
+                    keycode = keycode & 0xFF;
+                }
+#    endif  // LEADER_KEY_STRICT_KE
+                if (leader_sequence_size < 5) {
+                    leader_sequence[leader_sequence_size] = keycode;
+                    leader_sequence_size++;
+#    ifdef LEADER_PER_KEY_TIMING
+                    leader_time = timer_read();
+#    endif
+                }
+                return false;
+            }
         }
-#endif // LEADER_KEY_STRICT_KE
-        if(leader_sequence_size < 5) {
-          leader_sequence[leader_sequence_size] = keycode;
-          leader_sequence_size++;
-#ifdef LEADER_PER_KEY_TIMING
-          leader_time = timer_read();
-#endif
-        }
-        return false;
-      }
     }
-  }
-  if (keycode == KC_LEAD || keycode == 28951 ) {
-    if(record->event.pressed) {
-      awaiting_leader_release = true;
-    } else {
-      if (awaiting_leader_release) {
+    if (keycode == KC_LEAD && record->event.pressed) {
         qk_leader_start();
         return false;
-      }
-
+    } else if (keycode == 28951) {
+        if (record->event.pressed) {
+            awaiting_leader_release = true;
+        } else if (awaiting_leader_release) {
+            qk_leader_start();
+            return false;
+        }
     }
-  }
-  return true;
+    return true;
 }
 
 #endif

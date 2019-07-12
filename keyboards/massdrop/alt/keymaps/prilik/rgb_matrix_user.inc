@@ -13,7 +13,7 @@ RGB_MATRIX_EFFECT(leader_key)
 #    include <math.h>
 #    include <print.h>
 
-#    define max(a, b) (((a) > (b)) ? (a) : (b)
+#    define max(a, b) (((a) > (b)) ? (a) : (b))
 #    define min(a, b) (((a) < (b)) ? (a) : (b))
 #    define foreach(item, array)                                                                                            \
         for (int keep = 1, count = 0, size = sizeof(array) / sizeof *(array); keep && count != size; keep = !keep, count++) \
@@ -109,25 +109,18 @@ static bool reactive_gradient(effect_params_t* params) {
 
     // print("string");
     // calculate target color
-    const HSV hsv       = {rgb_matrix_config.hue + 80, rgb_matrix_config.sat, rgb_matrix_config.val};
-    const RGB highlight = hsv_to_rgb(hsv);
+    //const HSV hsv       = {rgb_matrix_config.hue, rgb_matrix_config.sat, rgb_matrix_config.val};
+    //const RGB highlight = hsv_to_rgb(hsv);
 
     // Relies on hue being 8-bit and wrapping
     for (uint8_t i = led_min; i < led_max; i++) {
-        // get gradient color
-        // const rgb_led led = g_rgb_leds[i];
-        // uint8_t hue = rgb_matrix_config.hue;
+        //get gradient color
+        //uint8_t hue = rgb_matrix_config.hue;
 
-        // if (led.matrix_co.raw != 0xFF) {
-        //   // Keys
-        //   //hue; //10 * led.matrix_co.row;
-        // } else {
-        //   // Underglow (same color as last row of keys)
-        //   //hue; //+= 10 * (MATRIX_ROWS - 1);
-        // }
+        //hue += 10 * (MATRIX_ROWS - 1);
 
-        HSV hsv = {0xFF, 0x00, rgb_matrix_config.val / 2};
-        RGB rgb = hsv_to_rgb(hsv);
+        //HSV hsv = {hue, rgb_matrix_config.sat, rgb_matrix_config.val};
+        //RGB rgb = hsv_to_rgb(hsv);
 
         // checks if key has been hit
         uint16_t tick = 0xffff;
@@ -140,14 +133,19 @@ static bool reactive_gradient(effect_params_t* params) {
         // scale the tick down based on fadeout preferences
         tick = scale16by8(tick, FADEOUT_SPEED);
         // Linear interpolate through RGB space
-        if (tick < max_tick) {
-            float pct = tick / (float)max_tick;
-            rgb.r     = highlight.r - pct * (highlight.r - rgb.r);
-            rgb.g     = highlight.g - pct * (highlight.g - rgb.g);
-            rgb.b     = highlight.b - pct * (highlight.b - rgb.b);
-        }
+            // float pct = tick / (float)max_tick;
+            // rgb.r     = highlight.r - pct;// * (highlight.r - rgb.r);
+            // rgb.g     = highlight.g - pct;// * (highlight.g - rgb.g);
+            // rgb.b     = highlight.b - pct;// * (highlight.b - rgb.b);
 
-        rgb_matrix_set_color(i, rgb.r, rgb.b, rgb.b);
+        HSV hsv = {rgb_matrix_config.hue, rgb_matrix_config.sat , rgb_matrix_config.val / 2};
+        if (tick < max_tick) {
+            hsv.h = hsv.h - 127 + (127 * tick / (float)max_tick);
+            hsv.v = hsv.v + hsv.v * (1 - tick / (float)max_tick);
+            uprintf("%d/%d\n", hsv.v, rgb_matrix_config.val);
+        }
+        RGB rgb = hsv_to_rgb(hsv);
+        rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);//, rgb.r, rgb.b, rgb.b);
     }
 
     return led_max < DRIVER_LED_TOTAL;
