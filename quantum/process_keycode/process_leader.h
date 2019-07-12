@@ -19,7 +19,6 @@
 
 #include "quantum.h"
 
-
 bool process_leader(uint16_t keycode, keyrecord_t *record);
 
 void leader_start(void);
@@ -33,6 +32,6 @@ void qk_leader_start(void);
 #define SEQ_FIVE_KEYS(key1, key2, key3, key4, key5) if (leader_sequence[0] == (key1) && leader_sequence[1] == (key2) && leader_sequence[2] == (key3) && leader_sequence[3] == (key4) && leader_sequence[4] == (key5))
 
 #define LEADER_EXTERNS() extern bool leading; extern bool instant_break; uint16_t leader_time; extern uint16_t leader_sequence[5]; extern uint8_t leader_sequence_size
-#define LEADER_DICTIONARY() if (leading && (instant_break || timer_elapsed(leader_time) > LEADER_TIMEOUT))
+#define LEADER_LOOP() if (leading && timer_elapsed(leader_time) > LEADER_TIMEOUT) { leading = false; leader_end();}
 
 #endif

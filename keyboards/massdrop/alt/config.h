@@ -125,7 +125,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RGB_MATRIX_LED_FLUSH_LIMIT 10
 
 
-#define LEADER_TIMEOUT 500
+#define LEADER_TIMEOUT 1000
 #define LEADER_PER_KEY_TIMING
 
 #include "config_led.h"

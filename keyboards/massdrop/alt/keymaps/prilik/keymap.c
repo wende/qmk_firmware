@@ -144,25 +144,7 @@ void keyboard_post_init_user(void) {
 
 LEADER_EXTERNS();
 void matrix_scan_user(void) {
-
-  LEADER_DICTIONARY() {
-    leading = false;
-    leader_end();
-    // Re(place the sequences below with your own sequences.
-    SEQ_TWO_KEYS(KC_A, KC_T) {
-        SEND_STRING(SS_LSFT(SS_LCMD("g")));
-    }
-    // Note: This is not an array, you don't need to put any commas
-    // or semolons between sequences.
-    SEQ_TWO_KEYS(KC_N, KC_T) {
-      // When I press KC_LEAD and then N followed by T, this sends CTRL + T
-      SEND_STRING(SS_LCTRL("t"));
-    }
-    SEQ_ONE_KEY(KC_W) {
-        SEND_STRING("WENDE");
-        instant_break = true;
-    }
-  }
+    LEADER_LOOP();
 }
 
 
@@ -181,6 +163,48 @@ void leader_end(void) {
   // Add your code to run when a leader key sequence ends here
 }
 
+bool on_leader(uint16_t keys[]) {
+    switch (keys[0]) {
+        case KC_A:
+            // Apps
+            switch (keys[1]) {
+                case KC_T:
+                    SEND_STRING(SS_LSFT(SS_LCMD("g")));
+                    return true;
+                case KC_S:
+                    register_code(KC_LGUI);
+                    tap_code(KC_GRV);
+                    tap_code(KC_S);
+                    unregister_code(KC_LGUI);
+                    return true;
+                case KC_D:
+                    register_code(KC_LGUI);
+                    tap_code(KC_SPACE);
+                    unregister_code(KC_LGUI);
+                    wait_ms(50);
+                    SEND_STRING("slack");
+                    tap_code(KC_ENT);
+                    return true;
+                case KC_C:
+                    register_code(KC_LGUI);
+                    tap_code(KC_SPACE);
+                    unregister_code(KC_LGUI);
+                    wait_ms(50);
+                    SEND_STRING("code");
+                    tap_code(KC_ENT);
+                    return true;
+
+                default: return false;
+            }
+        case KC_SPC:
+            register_code(KC_LGUI);
+            tap_code(KC_SPACE);
+            unregister_code(KC_LGUI);
+            return true;
+        default:
+            return false;
+    }
+}
 
 bool cmd_down = false;
 bool shift_down = false;

@@ -23,9 +23,12 @@
 #        define LEADER_TIMEOUT 300
 #    endif
 
+
 __attribute__((weak)) void leader_start(void) {}
 
 __attribute__((weak)) void leader_end(void) {}
+
+__attribute__((weak)) bool on_leader(uint16_t keys[]) {return false;}
 
 // Leader key stuff
 bool     leading       = false;
@@ -70,6 +73,10 @@ bool process_leader(uint16_t keycode, keyrecord_t *record) {
 #    ifdef LEADER_PER_KEY_TIMING
                     leader_time = timer_read();
 #    endif
+                }
+                if (on_leader(leader_sequence)) {
+                    leading = false;
+                    leader_end();
                 }
                 return false;
             }
