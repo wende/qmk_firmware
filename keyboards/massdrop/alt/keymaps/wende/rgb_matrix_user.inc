@@ -22,7 +22,6 @@ const uint8_t FADEOUT_SPEED = 120;  // personal preference
 
 static bool reactive_gradient(effect_params_t* params) {
     RGB_MATRIX_USE_LIMITS(led_min, led_max);
-    led_buffer[0] = (RGB){.r = 255, .b = 0, .g = 0};
 
     const uint16_t max_tick = 65535 / FADEOUT_SPEED;
 

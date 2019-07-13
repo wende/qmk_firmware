@@ -64,8 +64,8 @@ enum alt_layers {
     _MEMES,
 };
 
-#define KEY_COLOR_TEXTUAL RGB_WHITE
-#define KEY_COLOR_SPECIAL RGB_YELLOW
+#define KEY_COLOR_TEXTUAL RGB_CYAN
+#define KEY_COLOR_SPECIAL RGB_ORANGE
 #define KEY_COLOR_APP RGB_MAGENTA
 
 #define TG_NKRO MAGIC_TOGGLE_NKRO //Toggle 6KRO / NKRO mode
@@ -265,16 +265,24 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     rgb_matrix_clear_overlay();
 
     if (cmd_down && shift_down) {
+        uint8_t keys_inner[] = {KEYBOARD_LED_INNER};
+        foreach (uint8_t* key, keys_inner) {
+            rgb_matrix_set_color_overlay(*key, 0, 0, 0, 255);
+        };
         uint8_t keys_app[] = {KL_G, KL_H, KL_V, KL_H};
         foreach (uint8_t* key, keys_app) {
             rgb_matrix_set_color_overlay(*key, KEY_COLOR_APP, 255);
         };
         uint8_t keys_special[] = {KL_R, KL_T, KL_F};
-        foreach (uint8_t* key, keys_special) {
+            foreach (uint8_t* key, keys_special) {
             rgb_matrix_set_color_overlay(*key, KEY_COLOR_SPECIAL, 255);
         };
 
     } else if (cmd_down) {
+        uint8_t keys_inner[] = {KEYBOARD_LED_INNER};
+        foreach (uint8_t* key, keys_inner) {
+            rgb_matrix_set_color_overlay(*key, 0, 0, 0, 255);
+        };
         uint8_t keys_app[] = {KL_SPC};
         foreach (uint8_t* key, keys_app) {
             rgb_matrix_set_color_overlay(*key, KEY_COLOR_APP, 255);
@@ -287,7 +295,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         foreach (uint8_t* key, keys_special) {
             rgb_matrix_set_color_overlay(*key, KEY_COLOR_SPECIAL, 255);
         };
+
     } else if (ctrl_down) {
+        uint8_t keys_inner[] = {KEYBOARD_LED_INNER};
+        foreach (uint8_t* key, keys_inner) {
+            rgb_matrix_set_color_overlay(*key, 0, 0, 0, 255);
+        };
         uint8_t keys_txt[] = {KL_E, KL_A, KL_D, KL_H, KL_W};
         foreach (uint8_t* key, keys_txt) {
             rgb_matrix_set_color_overlay(*key, KEY_COLOR_TEXTUAL, 255);
@@ -356,7 +369,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
             } else {
                 if(nothing_after_ctl && timer_elapsed(c_or_norm_time) < C_OR_NORM_DELAY) {
-                    layer_invert(_VIM_BASE);
+                    record->event.pressed = true;
+                    process_leader(KC_LEAD, record);
+                    //layer_invert(_VIM_BASE);
                 }
                 unregister_code(KC_LCTL);
             }
