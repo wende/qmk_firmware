@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "rgb_matrix.h"
 #include <string.h>
 #include <math.h>
+#include "common.h"
 
 #ifdef USE_MASSDROP_CONFIGURATOR
 __attribute__((weak))
@@ -61,6 +62,7 @@ issi3733_driver_t issidrv[ISSI3733_DRIVER_COUNT];
 
 issi3733_led_t led_map[ISSI3733_LED_COUNT] = ISSI3733_LED_MAP;
 RGB led_buffer[ISSI3733_LED_COUNT];
+RGBA led_buffer_overlay[ISSI3733_LED_COUNT];
 
 uint8_t gcr_desired;
 uint8_t gcr_actual;
@@ -180,6 +182,18 @@ void gcr_compute(void)
     }
 }
 
+void rgb_matrix_set_color_overlay(uint8_t id, uint8_t r, uint8_t g, uint8_t b, uint8_t a){
+    led_buffer_overlay[id] = (RGBA){.r = r, .g = g, .b = b, .a = a};
+}
+void rgb_matrix_set_color_overlay_all(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    for(uint8_t i = 0; i < ISSI3733_LED_COUNT; i++) {
+        rgb_matrix_set_color_overlay(i, r, g, b, a);
+    }
+}
+void rgb_matrix_clear_overlay(void) {
+    rgb_matrix_set_color_overlay_all(0,0,0,0);
+}
+
 void issi3733_prepare_arrays(void)
 {
     memset(issidrv,0,sizeof(issi3733_driver_t) * ISSI3733_DRIVER_COUNT);
@@ -264,12 +278,19 @@ void flush(void)
     // Wait for previous transfer to complete
     while (i2c_led_q_running) {}
 
+    RGB rgb;
+    RGBA rgba;
     // Copy buffer to live DMA region
     for (uint8_t i = 0; i < ISSI3733_LED_COUNT; i++)
     {
-        *led_map[i].rgb.r = led_buffer[i].r;
-        *led_map[i].rgb.g = led_buffer[i].g;
-        *led_map[i].rgb.b = led_buffer[i].b;
+        rgb = led_buffer[i];
+        rgba = led_buffer_overlay[i];
+
+        //rgba = led_buffer_overlay[i];
+
+        *led_map[i].rgb.r = (rgb.r * (255 - rgba.a) + rgba.r * rgba.a) / 255;
+        *led_map[i].rgb.g = (rgb.g * (255 - rgba.a) + rgba.g * rgba.a) / 255;
+        *led_map[i].rgb.b = (rgb.b * (255 - rgba.a) + rgba.b * rgba.a) / 255;
     }
 
 #ifdef USE_MASSDROP_CONFIGURATOR

@@ -2,6 +2,7 @@
 #include "process_unicode.h"
 #include <print.h>
 # include "rgblight.h"
+# include "common.h"
 # define array_eq(a, b) (memcmp(a, b, sizeof(a)) == 0)
 
 enum alt_keycodes {
@@ -63,6 +64,10 @@ enum alt_layers {
     _MEMES,
 };
 
+#define KEY_COLOR_TEXTUAL RGB_WHITE
+#define KEY_COLOR_SPECIAL RGB_YELLOW
+#define KEY_COLOR_APP RGB_MAGENTA
+
 #define TG_NKRO MAGIC_TOGGLE_NKRO //Toggle 6KRO / NKRO mode
 #define ___X___ XXXXXXX // KC_NO
 
@@ -112,7 +117,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 int last_non_vim_hue;
 uint32_t layer_state_set_user(uint32_t state) {
 
-    uprintf("Setting layer %d", biton32(state));
     switch (biton32(state)) {
         case _VIM_BASE:
             SET_NORMAL_MODE_COLOR();
@@ -163,6 +167,7 @@ void leader_end(void) {
   // Add your code to run when a leader key sequence ends here
 }
 
+#define ALFRED_TIMEOUT() wait_ms(20);
 bool on_leader(uint16_t keys[]) {
     switch (keys[0]) {
         case KC_A:
@@ -181,7 +186,7 @@ bool on_leader(uint16_t keys[]) {
                     register_code(KC_LGUI);
                     tap_code(KC_SPACE);
                     unregister_code(KC_LGUI);
-                    wait_ms(50);
+                    ALFRED_TIMEOUT();
                     SEND_STRING("slack");
                     tap_code(KC_ENT);
                     return true;
@@ -189,7 +194,7 @@ bool on_leader(uint16_t keys[]) {
                     register_code(KC_LGUI);
                     tap_code(KC_SPACE);
                     unregister_code(KC_LGUI);
-                    wait_ms(50);
+                    ALFRED_TIMEOUT();
                     SEND_STRING("code");
                     tap_code(KC_ENT);
                     return true;
@@ -209,11 +214,14 @@ bool on_leader(uint16_t keys[]) {
 bool cmd_down = false;
 bool shift_down = false;
 bool ctrl_down = false;
+
+// Keys for C_OR_NORM
 bool nothing_after_ctl = true;
+int c_or_norm_time = 0;
+
 
 bool process_vim_keypress(uint16_t keycode, keyrecord_t *record) {
     if(IS_LAYER_OFF(_VIM_BASE)) return true;
-    uprintf("layer on");
     switch (keycode) {
         case KC_E:
             // TODO extract this line outside
@@ -229,6 +237,7 @@ bool process_vim_keypress(uint16_t keycode, keyrecord_t *record) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+
     if(!process_vim_keypress(keycode, record)) return false;
     if(rgb_matrix_get_mode() != RGB_MATRIX_CUSTOM_leader_key) {
         last_non_vim_hue = rgb_matrix_config.hue;
@@ -236,9 +245,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     static uint32_t key_timer;
     if(record->event.pressed) nothing_after_ctl = false;
 
-    uprintf("%d\n", keycode);
     switch (keycode) {
-        case LCTL_T(TG(_VIM_BASE)):
+        case C_OR_NORM:
         case KC_LCTRL:
             ctrl_down = record->event.pressed;
             break;
@@ -255,17 +263,34 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         default:
             break;
     }
+
+    // Highlight the keys for shortcuts
+    rgb_matrix_clear_overlay();
+
     if (cmd_down && shift_down) {
-        rgb_matrix_mode(RGB_MATRIX_CUSTOM_reactive_gradient);
-        rgb_matrix_mode(RGB_MATRIX_CUSTOM_shortcuts_cheatsheet_cmd_shift);
+        uint8_t keys_special[] = {KL_G, KL_H, KL_R, KL_T, KL_V, KL_H};
+        foreach (uint8_t* key, keys_special) {
+            rgb_matrix_set_color_overlay(*key, KEY_COLOR_APP, 255);
+        };
+
     } else if (cmd_down) {
-        rgb_matrix_mode(RGB_MATRIX_CUSTOM_reactive_gradient);
-        rgb_matrix_mode(RGB_MATRIX_CUSTOM_shortcuts_cheatsheet_cmd);
+        uint8_t keys_txt[] = {KL_A, KL_C, KL_V, KL_X};
+        foreach (uint8_t* key, keys_txt) {
+            rgb_matrix_set_color_overlay(*key, KEY_COLOR_TEXTUAL, 255);
+        };
+        uint8_t keys_special[] = {KL_S, KL_F, KL_W, KL_R};
+        foreach (uint8_t* key, keys_special) {
+            rgb_matrix_set_color_overlay(*key, KEY_COLOR_SPECIAL, 255);
+        };
     } else if (ctrl_down) {
-        rgb_matrix_mode(RGB_MATRIX_CUSTOM_reactive_gradient);
-        rgb_matrix_mode(RGB_MATRIX_CUSTOM_shortcuts_cheatsheet_ctrl);
-    } else {
-        rgb_matrix_mode(RGB_MATRIX_CUSTOM_reactive_gradient);
+        uint8_t keys_txt[] = {KL_E, KL_A, KL_D, KL_H, KL_W};
+        foreach (uint8_t* key, keys_txt) {
+            rgb_matrix_set_color_overlay(*key, KEY_COLOR_TEXTUAL, 255);
+        };
+        uint8_t keys_special[] = {KL_SPC, KL_G, KC_C, KC_S};
+        foreach (uint8_t* key, keys_special) {
+            rgb_matrix_set_color_overlay(*key, KEY_COLOR_SPECIAL, 255);
+        };
     }
 
     static struct {
@@ -319,13 +344,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return true;
 
         case C_OR_NORM:
-            uprintf("C_OR_NORM");
             if (record->event.pressed) {
                 register_code(KC_LCTL);
                 nothing_after_ctl = true;
+                c_or_norm_time = timer_read();
+
             } else {
                 // TODO add a timeout so that when held to long it doesn't switch layer anyway
-                if(nothing_after_ctl) {
+                if(nothing_after_ctl && timer_elapsed(c_or_norm_time) < LEADER_TIMEOUT) {
                     layer_invert(_VIM_BASE);
                 }
                 unregister_code(KC_LCTL);

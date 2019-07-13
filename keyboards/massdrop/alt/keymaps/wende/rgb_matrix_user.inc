@@ -20,7 +20,7 @@ RGB_MATRIX_EFFECT(leader_key)
             for (item = (array) + count; keep; keep = !keep)
 
 /*---------------------------------  Outrun  ---------------------------------*/
-enum KEEB { K_ESC = 0, K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9, K_0, K_HYPHEN, K_EQL, K_BSP, K_DEL, K_TAB, K_Q, K_W, K_E, K_R, K_T, K_Y, K_U, K_I, K_O, K_P, K_LBRACKET, K_RBRACKET, K_BACKSLASH, K_HOME, K_CPSL, K_A, K_S, K_D, K_F, K_G, K_H, K_J, K_K, K_L, K_SEMICOLON, K_GRAVE, K_RET, K_PGUP, K_L_SHIFT, K_Z, K_X, K_C, K_V, K_B, K_N, K_M, K_COMMA, K_DOT, K_SLASH, K_R_SHIFT, K_ARROW_UP, K_PGDN, K_L_CTRL, K_L_ALT, K_L_META, K_SPC, K_R_ALT, K_FN, K_ARROW_LEFT, K_ARROW_DOWN, K_ARROW_RIGHT, FIRST_LED };
+enum KEEB { KL_ESC = 0, KL_1, KL_2, KL_3, KL_4, KL_5, KL_6, KL_7, KL_8, KL_9, KL_0, KL_HYPHEN, KL_EQL, KL_BSP, KL_DEL, KL_TAB, KL_Q, KL_W, KL_E, KL_R, KL_T, KL_Y, KL_U, KL_I, KL_O, KL_P, KL_LBRACKET, KL_RBRACKET, KL_BACKSLASH, KL_HOME, KL_CPSL, KL_A, KL_S, KL_D, KL_F, KL_G, KL_H, KL_J, KL_K, KL_L, KL_SEMICOLON, KL_GRAVE, KL_RET, KL_PGUP, KL_L_SHIFT, KL_Z, KL_X, KL_C, KL_V, KL_B, KL_N, KL_M, KL_COMMA, KL_DOT, KL_SLASH, KL_R_SHIFT, KL_ARROW_UP, KL_PGDN, KL_L_CTRL, KL_L_ALT, KL_L_META, KL_SPC, KL_R_ALT, KL_FN, KL_ARROW_LEFT, KL_ARROW_DOWN, KL_ARROW_RIGHT, FIRST_LED };
 const uint8_t LAST_LED = FIRST_LED + 37;
 
 // static uint8_t get_last_key(void) { return g_last_hit_tracker.index[g_last_hit_tracker.count - 1]; }
@@ -75,7 +75,7 @@ static bool leader_key(effect_params_t* params) {
 /*----------------------------------  Shortcut Cheatsheet  ---------------------------------*/
 static bool shortcuts_cheatsheet_ctrl(effect_params_t* params) {
     if (params->init) {
-        int keys[] = {K_E, K_A, K_K, K_H, K_D, K_Y, K_T};
+        int keys[] = {KL_E, KL_A, KL_K, KL_H, KL_D, KL_Y, KL_T};
         foreach (int* key, keys) { tmp_rgb(*key, 255, 255, 0); };
         return false;
     }
@@ -83,7 +83,7 @@ static bool shortcuts_cheatsheet_ctrl(effect_params_t* params) {
 }
 static bool shortcuts_cheatsheet_cmd(effect_params_t* params) {
     if (params->init) {
-        int keys[] = {K_S, K_F, K_A, K_W, K_D};
+        int keys[] = {KL_S, KL_F, KL_A, KL_W, KL_D};
         foreach (int* key, keys) { tmp_rgb(*key, 0, 0, 255); };
         return false;
     }
@@ -91,7 +91,7 @@ static bool shortcuts_cheatsheet_cmd(effect_params_t* params) {
 }
 static bool shortcuts_cheatsheet_cmd_shift(effect_params_t* params) {
     if (params->init) {
-        int keys[] = {K_G, K_H, K_R, K_T, K_V};
+        int keys[] = {KL_G, KL_H, KL_R, KL_T, KL_V};
         foreach (int* key, keys) { tmp_rgb(*key, 0, 255, 255); };
         return false;
     }
@@ -104,6 +104,7 @@ const uint8_t FADEOUT_SPEED = 120;  // personal preference
 
 static bool reactive_gradient(effect_params_t* params) {
     RGB_MATRIX_USE_LIMITS(led_min, led_max);
+    led_buffer[0] = (RGB){.r = 255, .b = 0, .g = 0};
 
     const uint16_t max_tick = 65535 / FADEOUT_SPEED;
 
@@ -142,7 +143,6 @@ static bool reactive_gradient(effect_params_t* params) {
         if (tick < max_tick) {
             hsv.h = hsv.h - 127 + (127 * tick / (float)max_tick);
             hsv.v = hsv.v + hsv.v * (1 - tick / (float)max_tick);
-            uprintf("%d/%d\n", hsv.v, rgb_matrix_config.val);
         }
         RGB rgb = hsv_to_rgb(hsv);
         rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);//, rgb.r, rgb.b, rgb.b);
@@ -154,43 +154,43 @@ static bool reactive_gradient(effect_params_t* params) {
 /*----------------------------------  Snake  ---------------------------------*/
 
 // // Tagged snake_cell union
-// typedef enum { SNKC_EMPTY_T = 0, SNKC_BODY_T, SNKC_APPLE_T } snk_cell_tag_t;
+// typedef enum { SNKC_EMPTY_T = 0, SNKC_BODY_T, SNKC_APPLE_T } snKL_cell_tag_t;
 // typedef struct {
 //   union {
 //                  // Empty
 //     uint8_t seg; // Body
 //                  // Apple
 //   };
-//   snk_cell_tag_t tag;
-// } snk_cell_t;
-// #define SNK_EMPTY      (snk_cell_t){{0},   SNKC_EMPTY_T}
-// #define SNK_BODY(seg)  (snk_cell_t){{seg}, SNKC_BODY_T}
-// #define SNK_APPLE      (snk_cell_t){{0},   SNKC_APPLE_T}
+//   snKL_cell_tag_t tag;
+// } snKL_cell_t;
+// #define SNKL_EMPTY      (snKL_cell_t){{0},   SNKC_EMPTY_T}
+// #define SNKL_BODY(seg)  (snKL_cell_t){{seg}, SNKC_BODY_T}
+// #define SNKL_APPLE      (snKL_cell_t){{0},   SNKC_APPLE_T}
 
-// typedef struct { uint8_t row, col; } snk_pos_t;
+// typedef struct { uint8_t row, col; } snKL_pos_t;
 
 // // Snake game state
 // static struct {
 //   uint32_t last_tick;
 
-//   snk_pos_t delta;
+//   snKL_pos_t delta;
 //   uint8_t   len;
-//   snk_pos_t body[67];
-//   snk_pos_t apple;
+//   snKL_pos_t body[67];
+//   snKL_pos_t apple;
 
-//   snk_cell_t led_states[ISSI3733_LED_COUNT];
+//   snKL_cell_t led_states[ISSI3733_LED_COUNT];
 // } snk = {0};
 
-// static void snk_init(void) {
+// static void snKL_init(void) {
 //   snk.last_tick = g_tick;
 
-//   snk.delta = (snk_pos_t){0, 1}; // start going right
+//   snk.delta = (snKL_pos_t){0, 1}; // start going right
 //   snk.len = 1;
-//   snk.body[0] = (snk_pos_t){2, 2}; // start from the S key ;)
-//   snk.apple = (snk_pos_t){2, 5}; // spawn apple to the right
+//   snk.body[0] = (snKL_pos_t){2, 2}; // start from the S key ;)
+//   snk.apple = (snKL_pos_t){2, 5}; // spawn apple to the right
 
 //   for (int i = 0; i < ISSI3733_LED_COUNT; i++)
-//     snk.led_states[i] = SNK_EMPTY;
+//     snk.led_states[i] = SNKL_EMPTY;
 // }
 
 // // #define __ 255
@@ -212,7 +212,7 @@ static bool reactive_gradient(effect_params_t* params) {
 //   return 255;
 // }
 
-// static void snk_update_state(void) {
+// static void snKL_update_state(void) {
 //   // update movement direction
 //   static uint16_t last_keycode = 0;
 //   // prevent reversing into yourself
@@ -224,10 +224,10 @@ static bool reactive_gradient(effect_params_t* params) {
 //   )) {
 //     switch (g_last_keycode) {
 //     // Snake direction
-//     case KC_UP:   snk.delta = (snk_pos_t){-1,  0}; break;
-//     case KC_LEFT: snk.delta = (snk_pos_t){ 0, -1}; break;
-//     case KC_DOWN: snk.delta = (snk_pos_t){ 1,  0}; break;
-//     case KC_RGHT: snk.delta = (snk_pos_t){ 0,  1}; break;
+//     case KC_UP:   snk.delta = (snKL_pos_t){-1,  0}; break;
+//     case KC_LEFT: snk.delta = (snKL_pos_t){ 0, -1}; break;
+//     case KC_DOWN: snk.delta = (snKL_pos_t){ 1,  0}; break;
+//     case KC_RGHT: snk.delta = (snKL_pos_t){ 0,  1}; break;
 //     // Exit snake mode
 //     case KC_ESC:  rgb_matrix_step(); break;
 //     default: break;
@@ -272,27 +272,27 @@ static bool reactive_gradient(effect_params_t* params) {
 
 //   // update LEDs
 //   for (int i = 0; i < ISSI3733_LED_COUNT; i++)
-//     snk.led_states[i] = SNK_EMPTY;
+//     snk.led_states[i] = SNKL_EMPTY;
 
 //   for (int i = 0; i < snk.len; i++) {
 //     const uint16_t led_i = key_to_led(snk.body[i].row, snk.body[i].col);
 //     if (led_i != 255)
-//       snk.led_states[led_i] = SNK_BODY(i);
+//       snk.led_states[led_i] = SNKL_BODY(i);
 //   }
 
-//   snk.led_states[key_to_led(snk.apple.row, snk.apple.col)] = SNK_APPLE;
+//   snk.led_states[key_to_led(snk.apple.row, snk.apple.col)] = SNKL_APPLE;
 // }
 
-// static void snk_run(uint16_t led_i) {
+// static void snKL_run(uint16_t led_i) {
 //   // check if it's time to run a game state update
 //   const uint16_t speed = max(10, 30 - snk.len * 2); // <-- tweak difficulty
 //   if (g_tick - snk.last_tick > speed) {
 //     snk.last_tick = g_tick;
-//     snk_update_state();
+//     snKL_update_state();
 //   }
 
 //   // update leds based off game state
-//   const snk_cell_t cell = snk.led_states[led_i];
+//   const snKL_cell_t cell = snk.led_states[led_i];
 
 //   RGB rgb;
 //   switch(cell.tag) {
@@ -316,8 +316,8 @@ static bool reactive_gradient(effect_params_t* params) {
 // }
 
 // static void rgb_matrix_snake(effect_params_t* params) {
-//   if (init) snk_init();
-//   else snk_run(params);
+//   if (init) snKL_init();
+//   else snKL_run(params);
 // }
 
 //
