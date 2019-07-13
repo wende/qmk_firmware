@@ -126,6 +126,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #define LEADER_TIMEOUT 1000
+#define C_OR_NORM_DELAY 300
 #define LEADER_PER_KEY_TIMING
 
 #include "config_led.h"

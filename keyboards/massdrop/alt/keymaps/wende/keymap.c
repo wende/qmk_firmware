@@ -2,7 +2,7 @@
 #include "process_unicode.h"
 #include <print.h>
 # include "rgblight.h"
-# include "common.h"
+#include "common.h"
 # define array_eq(a, b) (memcmp(a, b, sizeof(a)) == 0)
 
 enum alt_keycodes {
@@ -219,7 +219,7 @@ bool ctrl_down = false;
 bool nothing_after_ctl = true;
 int c_or_norm_time = 0;
 
-
+// TODO  Add colouring after each tap
 bool process_vim_keypress(uint16_t keycode, keyrecord_t *record) {
     if(IS_LAYER_OFF(_VIM_BASE)) return true;
     switch (keycode) {
@@ -239,9 +239,6 @@ bool process_vim_keypress(uint16_t keycode, keyrecord_t *record) {
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     if(!process_vim_keypress(keycode, record)) return false;
-    if(rgb_matrix_get_mode() != RGB_MATRIX_CUSTOM_leader_key) {
-        last_non_vim_hue = rgb_matrix_config.hue;
-    };
     static uint32_t key_timer;
     if(record->event.pressed) nothing_after_ctl = false;
 
@@ -268,17 +265,25 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     rgb_matrix_clear_overlay();
 
     if (cmd_down && shift_down) {
-        uint8_t keys_special[] = {KL_G, KL_H, KL_R, KL_T, KL_V, KL_H};
-        foreach (uint8_t* key, keys_special) {
+        uint8_t keys_app[] = {KL_G, KL_H, KL_V, KL_H};
+        foreach (uint8_t* key, keys_app) {
             rgb_matrix_set_color_overlay(*key, KEY_COLOR_APP, 255);
+        };
+        uint8_t keys_special[] = {KL_R, KL_T, KL_F};
+        foreach (uint8_t* key, keys_special) {
+            rgb_matrix_set_color_overlay(*key, KEY_COLOR_SPECIAL, 255);
         };
 
     } else if (cmd_down) {
+        uint8_t keys_app[] = {KL_SPC};
+        foreach (uint8_t* key, keys_app) {
+            rgb_matrix_set_color_overlay(*key, KEY_COLOR_APP, 255);
+        };
         uint8_t keys_txt[] = {KL_A, KL_C, KL_V, KL_X};
         foreach (uint8_t* key, keys_txt) {
             rgb_matrix_set_color_overlay(*key, KEY_COLOR_TEXTUAL, 255);
         };
-        uint8_t keys_special[] = {KL_S, KL_F, KL_W, KL_R};
+        uint8_t keys_special[] = {KL_S, KL_F, KL_W, KL_R, KL_B, KL_Y};
         foreach (uint8_t* key, keys_special) {
             rgb_matrix_set_color_overlay(*key, KEY_COLOR_SPECIAL, 255);
         };
@@ -287,7 +292,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         foreach (uint8_t* key, keys_txt) {
             rgb_matrix_set_color_overlay(*key, KEY_COLOR_TEXTUAL, 255);
         };
-        uint8_t keys_special[] = {KL_SPC, KL_G, KC_C, KC_S};
+        uint8_t keys_special[] = {KL_SPC, KL_G, KL_C, KL_S};
         foreach (uint8_t* key, keys_special) {
             rgb_matrix_set_color_overlay(*key, KEY_COLOR_SPECIAL, 255);
         };
@@ -350,8 +355,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 c_or_norm_time = timer_read();
 
             } else {
-                // TODO add a timeout so that when held to long it doesn't switch layer anyway
-                if(nothing_after_ctl && timer_elapsed(c_or_norm_time) < LEADER_TIMEOUT) {
+                if(nothing_after_ctl && timer_elapsed(c_or_norm_time) < C_OR_NORM_DELAY) {
                     layer_invert(_VIM_BASE);
                 }
                 unregister_code(KC_LCTL);
