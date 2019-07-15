@@ -26,7 +26,7 @@
 
 __attribute__((weak)) void leader_start(void) {}
 
-__attribute__((weak)) void leader_end(void) {}
+__attribute__((weak)) void leader_end(bool success) {}
 
 __attribute__((weak)) bool on_leader(uint16_t keys[]) {return false;}
 
@@ -54,6 +54,7 @@ void qk_leader_start(void) {
     leader_sequence[4]   = 0;
 }
 
+
 bool awaiting_leader_release = false;
 bool process_leader(uint16_t keycode, keyrecord_t *record) {
     // Leader key set-up
@@ -76,7 +77,7 @@ bool process_leader(uint16_t keycode, keyrecord_t *record) {
                 }
                 if (on_leader(leader_sequence)) {
                     leading = false;
-                    leader_end();
+                    leader_end(true);
                 }
                 return false;
             }

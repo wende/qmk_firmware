@@ -30,6 +30,19 @@ enum alt_keycodes {
 #define UC_UGHH X(E_UGHH) // UGHHHHH     - 😩
 };
 
+void tap_hyper(uint8_t key) {
+    register_code(KC_LGUI);
+    register_code(KC_LSFT);
+    register_code(KC_LALT);
+    register_code(KC_LCTRL);
+    tap_code(key);
+    unregister_code(KC_LGUI);
+    unregister_code(KC_LSFT);
+    unregister_code(KC_LALT);
+    unregister_code(KC_LCTRL);
+}
+
+
 
 #define MODS_SHIFT (get_mods() & MOD_BIT(KC_LSHIFT) || get_mods() & MOD_BIT(KC_RSHIFT))
 #define MODS_CTRL  (get_mods() & MOD_BIT(KC_LCTL)   || get_mods() & MOD_BIT(KC_RCTRL))
@@ -156,14 +169,25 @@ void matrix_scan_user(void) {
 int default_rgb_mode;
 void leader_start(void) {
   SET_LEAD_MODE_COLOR();
+
   //rgb_matrix_set_mode(RGB_MATRIX_CUSTOM_vim_mode)
 }
-void leader_end(void) {
-   if (IS_LAYER_ON(_VIM_BASE)) {
-       SET_NORMAL_MODE_COLOR();
-   } else {
-       SET_INSERT_MODE_COLOR();
-   }
+void leader_end(bool success) {
+    if (IS_LAYER_ON(_VIM_BASE)) {
+        SET_NORMAL_MODE_COLOR();
+    } else {
+        SET_INSERT_MODE_COLOR();
+    }
+    if (!success) {
+        // Make an X pattern
+        uint8_t keys[] = {KL_5, KL_T, KL_H, KL_N, KL_7, KL_Y, KL_G, KL_V};
+        foreach (uint8_t* key, keys) {
+            rgb_matrix_set_color_overlay(*key, RGB_RED, 255);
+        };
+        flush();
+        wait_ms(300);
+        rgb_matrix_clear_overlay();
+    }
   // Add your code to run when a leader key sequence ends here
 }
 
@@ -177,29 +201,21 @@ bool on_leader(uint16_t keys[]) {
                     SEND_STRING(SS_LSFT(SS_LCMD("g")));
                     return true;
                 case KC_S:
-                    register_code(KC_LGUI);
-                    tap_code(KC_GRV);
-                    tap_code(KC_S);
-                    unregister_code(KC_LGUI);
+                    tap_hyper(KC_S);
                     return true;
                 case KC_D:
-                    register_code(KC_LGUI);
-                    tap_code(KC_SPACE);
-                    unregister_code(KC_LGUI);
-                    ALFRED_TIMEOUT();
-                    SEND_STRING("slack");
-                    tap_code(KC_ENT);
+                    tap_hyper(KC_D);
                     return true;
                 case KC_C:
-                    register_code(KC_LGUI);
-                    tap_code(KC_SPACE);
-                    unregister_code(KC_LGUI);
-                    ALFRED_TIMEOUT();
-                    SEND_STRING("code");
-                    tap_code(KC_ENT);
+                    tap_hyper(KC_C);
                     return true;
+                case KC_B:
+                    tap_hyper(KC_B);
+                    return true;
+                default:
+                    return false;
 
-                default: return false;
+
             }
         case KC_SPC:
             register_code(KC_LGUI);
@@ -291,7 +307,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         foreach (uint8_t* key, keys_txt) {
             rgb_matrix_set_color_overlay(*key, KEY_COLOR_TEXTUAL, 255);
         };
-        uint8_t keys_special[] = {KL_S, KL_F, KL_W, KL_R, KL_B, KL_Y};
+        uint8_t keys_special[] = {KL_S, KL_F, KL_W, KL_R, KL_B, KL_Y, KL_T, KL_Z};
         foreach (uint8_t* key, keys_special) {
             rgb_matrix_set_color_overlay(*key, KEY_COLOR_SPECIAL, 255);
         };

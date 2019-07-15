@@ -89,6 +89,7 @@ extern RGBA led_buffer_overlay[ISSI3733_LED_COUNT];
 void rgb_matrix_set_color_overlay(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 void rgb_matrix_set_color_overlay_all(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 void rgb_matrix_clear_overlay(void);
+void flush(void);
 
 void gcr_compute(void);
 

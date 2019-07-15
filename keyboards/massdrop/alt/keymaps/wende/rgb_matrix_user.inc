@@ -37,7 +37,13 @@ static bool reactive_gradient(effect_params_t* params) {
         // scale the tick down based on fadeout preferences
         tick = scale16by8(tick, FADEOUT_SPEED);
 
+
         HSV hsv = {rgb_matrix_config.hue, rgb_matrix_config.sat , rgb_matrix_config.val / 2};
+
+        if(i >= KL_ESC && i <= KL_DEL ) {
+            // Light the first row normally
+            hsv.v = rgb_matrix_config.val;
+        }
         if (tick < max_tick) {
             hsv.h = hsv.h - 127 + (127 * tick / (float)max_tick);
             hsv.v = hsv.v + hsv.v * (1 - tick / (float)max_tick);
