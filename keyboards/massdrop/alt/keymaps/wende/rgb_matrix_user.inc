@@ -1,4 +1,5 @@
 RGB_MATRIX_EFFECT(reactive_gradient)
+// RGB_MATRIX_EFFECT(snake)
 
 #ifdef RGB_MATRIX_CUSTOM_EFFECT_IMPLS
 
@@ -54,6 +55,50 @@ static bool reactive_gradient(effect_params_t* params) {
 
     return led_max < DRIVER_LED_TOTAL;
 }
+
+/* --------------------------------- 2048 ----------------------------------- */
+
+// const uint8_t coord_to_led[4][4] = {
+//     {KL_1, KL_2, KL_3, KL_4},
+//     {KL_Q, KL_W, KL_E, KL_R},
+//     {KL_A, KL_S, KL_D, KL_F},
+//     {KL_Z, KL_X, KL_C, KL_V}
+// };
+// const RGB power_to_color[11] = {
+//     RGB(0, 0, 0),
+//     RGB(RGB_ORANGE),
+//     RGB(RGB_WHITE),
+//     RGB(RGB_YELLOW),
+//     RGB(RGB_ORANGE),
+//     RGB(RGB_RED)
+// };
+
+// uint8_t board[4][4];
+// enum phase {
+//     IDLE,
+//     MOVING,
+//     GENERATING,
+// };
+// enum direction {
+//     NONE,
+//     UP,
+//     DOWN,
+//     RIGHT,
+//     LEFT,
+// };
+// uint8_t current_phase;
+// static bool two_o_four_eight(effect_params_t* params) {
+//     if(params->init){
+//         current_phase = GENERATING;
+//     }
+//     switch(current_phase) {
+//         case IDLE: wait_for_keypress(); break;
+//         case MOVING: move_board(); break;
+//         case GENERATING: generate_new_block(); break;
+//     }
+//     return false;
+// }
+
 
 /*----------------------------------  Snake  ---------------------------------*/
 
@@ -119,6 +164,7 @@ static bool reactive_gradient(effect_params_t* params) {
 // static void snKL_update_state(void) {
 //   // update movement direction
 //   static uint16_t last_keycode = 0;
+//   uint16_t g_last_keycode = g_last_hit_tracker.index[g_last_hit_tracker.count];
 //   // prevent reversing into yourself
 //   if (!(
 //     (g_last_keycode == KC_UP   && last_keycode == KC_DOWN) ||
@@ -136,7 +182,7 @@ static bool reactive_gradient(effect_params_t* params) {
 //     case KC_ESC:  rgb_matrix_step(); break;
 //     default: break;
 //     }
-//     last_keycode = g_last_keycode;
+//     last_keycode = g_last_hit_tracker.index[g_last_hit_tracker.count - 1];
 //   }
 
 //   // make room for new head
@@ -186,8 +232,9 @@ static bool reactive_gradient(effect_params_t* params) {
 
 //   snk.led_states[key_to_led(snk.apple.row, snk.apple.col)] = SNKL_APPLE;
 // }
-
+// int g_tick = 0;
 // static void snKL_run(uint16_t led_i) {
+//     g_tick = g_tick + 1;
 //   // check if it's time to run a game state update
 //   const uint16_t speed = max(10, 30 - snk.len * 2); // <-- tweak difficulty
 //   if (g_tick - snk.last_tick > speed) {
@@ -219,11 +266,13 @@ static bool reactive_gradient(effect_params_t* params) {
 //   rgb_matrix_set_color(led_i, rgb.r, rgb.g, rgb.b);
 // }
 
-// static void rgb_matrix_snake(effect_params_t* params) {
-//   if (init) snKL_init();
-//   else snKL_run(params);
+// static void snake(effect_params_t* params) {
+//   if (params->init) snKL_init();
+//   else {
+//       for (int i = 0; i < ISSI3733_LED_COUNT; i++) snKL_run(i);
+//   }
 // }
 
-//
+
 
 #endif  // RGB_MATRIX_CUSTOM_EFFECT_IMPLS

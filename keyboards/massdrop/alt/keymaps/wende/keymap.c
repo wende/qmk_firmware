@@ -88,9 +88,9 @@ keymap_config_t keymap_config;
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_QWERTY] = LAYOUT(
-        KC_ESC,               KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,  \
+        KC_LEAD,               KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,  \
         KC_TAB,                KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC, KC_BSLS, KC_HOME, \
-        C_OR_NORM,             KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,          KC_ENT,  KC_PGUP, \
+        LCTL_T(KC_BSPC),       KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,          KC_ENT,  KC_PGUP, \
         LSFT_T(KC_GRV),        KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,          KC_UP,   KC_PGDN, \
         KC_LCTL,               KC_LALT, KC_LGUI,                            KC_SPC,                             KC_RALT, MO(_ACTIONS),   KC_LEFT, KC_DOWN, KC_RGHT  \
     ),
@@ -180,6 +180,7 @@ void leader_end(bool success) {
     }
     if (!success) {
         // Make an X pattern
+        rgb_matrix_clear_overlay();
         uint8_t keys[] = {KL_5, KL_T, KL_H, KL_N, KL_7, KL_Y, KL_G, KL_V};
         foreach (uint8_t* key, keys) {
             rgb_matrix_set_color_overlay(*key, RGB_RED, 255);
@@ -191,40 +192,79 @@ void leader_end(bool success) {
   // Add your code to run when a leader key sequence ends here
 }
 
+
+
 #define ALFRED_TIMEOUT() wait_ms(20);
+#define LEAD(key) \
+    rgb_matrix_set_color_overlay(KL_##key, RGB_ORANGE, 255);\
+    success = false; \
+    if(keys[counter] == KC_##key && counter++ > -1) { \
+       success = true;\
+       rgb_matrix_clear_overlay(); \
+    } \
+    if(success)
+#define HYPER_LEAD(key) LEAD(key) { tap_hyper(KC_##key); return true; }
+
 bool on_leader(uint16_t keys[]) {
-    switch (keys[0]) {
-        case KC_A:
-            // Apps
-            switch (keys[1]) {
-                case KC_T:
-                    SEND_STRING(SS_LSFT(SS_LCMD("g")));
-                    return true;
-                case KC_S:
-                    tap_hyper(KC_S);
-                    return true;
-                case KC_D:
-                    tap_hyper(KC_D);
-                    return true;
-                case KC_C:
-                    tap_hyper(KC_C);
-                    return true;
-                case KC_B:
-                    tap_hyper(KC_B);
-                    return true;
-                default:
-                    return false;
-
-
-            }
-        case KC_SPC:
-            register_code(KC_LGUI);
-            tap_code(KC_SPACE);
-            unregister_code(KC_LGUI);
+    int counter = 0;
+    int step = 0;
+    while(keys[step] != 0) step++;
+    bool success = false;
+    LEAD(A) {
+        LEAD(T) {
+            SEND_STRING(SS_LSFT(SS_LCMD("g")));
             return true;
-        default:
-            return false;
+        }
+        HYPER_LEAD(S)
+        HYPER_LEAD(D)
+        HYPER_LEAD(C)
+        HYPER_LEAD(B)
     }
+    // TODO: Fail here instead of just breaking out
+    if(step > counter) return true;
+    else return false;
+            // Apps
+        //     WHEN_KEY(KC_C, KL_C, {
+        //         SEND_STRING("SS");
+        //     });
+        //     switch (keys[1]) {
+        //         case KC_T:
+        //
+        //             return true;
+        //         case KC_S:
+        //
+        //             return true;
+        //         case KC_D:
+        //
+        //         case KC_C:
+        //             ;
+        //             return true;
+        //         case KC_B:
+        //             tap_hyper(KC_B);
+        //             return true;
+        //         default:
+        //             return false;
+
+
+        //     })
+        // // Windows
+        // // case KC_W:
+        // //     case KC_F:
+        // //     case
+
+        // //     return false;
+
+        // // Tabs
+        // // case KC_T:
+
+        // case KC_SPC:
+        //     register_code(KC_LGUI);
+        //     tap_code(KC_SPACE);
+        //     unregister_code(KC_LGUI);
+        //     return true;
+        // });
+    // };
+    // return false;
 }
 
 bool cmd_down = false;
@@ -278,7 +318,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 
     // Highlight the keys for shortcuts
-    rgb_matrix_clear_overlay();
+    if (!leading) rgb_matrix_clear_overlay();
 
     if (cmd_down && shift_down) {
         uint8_t keys_inner[] = {KEYBOARD_LED_INNER};

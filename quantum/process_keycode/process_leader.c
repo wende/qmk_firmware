@@ -52,6 +52,7 @@ void qk_leader_start(void) {
     leader_sequence[2]   = 0;
     leader_sequence[3]   = 0;
     leader_sequence[4]   = 0;
+    on_leader(leader_sequence);
 }
 
 
