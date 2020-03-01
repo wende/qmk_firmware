@@ -1,9 +1,9 @@
 #include QMK_KEYBOARD_H
 #include "process_unicode.h"
 #include <print.h>
-# include "rgblight.h"
+#include "rgblight.h"
 #include "common.h"
-# define array_eq(a, b) (memcmp(a, b, sizeof(a)) == 0)
+#define array_eq(a, b) (memcmp(a, b, sizeof(a)) == 0)
 
 enum alt_keycodes {
 
@@ -16,6 +16,7 @@ enum alt_keycodes {
     MD_BOOT,               //Restart into bootloader after hold timeout
 
     C_OR_NORM,
+    SLEEP_ALL,
     WIDETXT, // w i d e t e x t   f o r   a   w i d e   b o y
     TAUNTXT, // FoR ThE UlTiMaTe sHiTpOsTiNg eXpErIeNcE
 
@@ -43,13 +44,24 @@ void tap_hyper(uint8_t key) {
 }
 
 
-
+#define LEADER_ENABLED false
 #define MODS_SHIFT (get_mods() & MOD_BIT(KC_LSHIFT) || get_mods() & MOD_BIT(KC_RSHIFT))
 #define MODS_CTRL  (get_mods() & MOD_BIT(KC_LCTL)   || get_mods() & MOD_BIT(KC_RCTRL))
 #define MODS_ALT   (get_mods() & MOD_BIT(KC_LALT)   || get_mods() & MOD_BIT(KC_RALT))
+#define MODS_GUI   (get_mods() & MOD_BIT(KC_LGUI)   || get_mods() & MOD_BIT(KC_RGUI))
+#define MODS_RALT  (get_mods() & MOD_BIT(KC_RALT))
+
 #define SET_INSERT_MODE_COLOR() rgb_matrix_sethsv(HSV_CYAN)
 #define SET_NORMAL_MODE_COLOR() rgb_matrix_sethsv(HSV_ORANGE)
 #define SET_LEAD_MODE_COLOR() rgb_matrix_sethsv(HSV_PURPLE)
+
+#define KEY_COLOR_TEXTUAL RGB_CYAN
+#define KEY_COLOR_SPECIAL RGB_ORANGE
+#define KEY_COLOR_APP RGB_MAGENTA
+
+
+#define TG_NKRO MAGIC_TOGGLE_NKRO //Toggle 6KRO / NKRO mode
+#define ___X___ XXXXXXX // KC_NO
 
 enum unicode_names {
     E_100,
@@ -77,18 +89,13 @@ enum alt_layers {
     _MEMES,
 };
 
-#define KEY_COLOR_TEXTUAL RGB_CYAN
-#define KEY_COLOR_SPECIAL RGB_ORANGE
-#define KEY_COLOR_APP RGB_MAGENTA
 
-#define TG_NKRO MAGIC_TOGGLE_NKRO //Toggle 6KRO / NKRO mode
-#define ___X___ XXXXXXX // KC_NO
 
 keymap_config_t keymap_config;
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_QWERTY] = LAYOUT(
-        KC_LEAD,               KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,  \
+        KC_ESC,               KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,  \
         KC_TAB,                KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC, KC_BSLS, KC_HOME, \
         LCTL_T(KC_BSPC),       KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,          KC_ENT,  KC_PGUP, \
         LSFT_T(KC_GRV),        KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,          KC_UP,   KC_PGDN, \
@@ -102,11 +109,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______, _______, _______,                            KC_LEAD,                            _______, MO(_ACTIONS), _______, _______, _______  \
     ),
     [_ACTIONS] = LAYOUT(
-        KC_GRV,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______, KC_MUTE, \
-        _______, RGB_SPD, RGB_VAI, RGB_SPI, RGB_HUI, RGB_SAI, _______, U_T_AUTO,U_T_AGCR,_______, KC_PSCR, KC_SLCK, KC_PAUS, DBG_KBD, KC_END,  \
-        _______, RGB_RMOD,RGB_VAD, RGB_MOD, RGB_HUD, RGB_SAD, _______, _______, _______, _______, _______, _______,          _______, KC_VOLU, \
-        _______, RGB_TOG, _______, _______, _______, MD_BOOT, TG_NKRO, DBG_TOG, KC_MPRV, KC_MNXT, KC_MPLY, _______,          _______, KC_VOLD, \
-        _______, _______, _______,                            KC_MPLY,                            MO(2),   _______, _______, _______, _______  \
+        SLEEP_ALL,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  KC_DEL, KC_MUTE, \
+        _______,    RGB_SPD, RGB_VAI, RGB_SPI, RGB_HUI, RGB_SAI, _______, U_T_AUTO,U_T_AGCR,_______, KC_PSCR, KC_SLCK, KC_PAUS, DBG_KBD, KC_END,  \
+        _______,    RGB_RMOD,RGB_VAD, RGB_MOD, RGB_HUD, RGB_SAD, _______, _______, _______, _______, _______, _______,          _______, KC_VOLU, \
+        _______,    RGB_TOG, _______, _______, _______, MD_BOOT, TG_NKRO, DBG_TOG, KC_MPRV, KC_MNXT, KC_MPLY, _______,          _______, KC_VOLD, \
+        _______,    _______, _______,                            KC_MPLY,                            MO(2),   _______, _______, _______, _______  \
     ),
     [_MEMES] = LAYOUT(
         ___X___, UC_100,  ___X___, ___X___, ___X___, ___X___, ___X___, ___X___, ___X___, ___X___, ___X___, ___X___, ___X___, ___X___, ___X___, \
@@ -195,14 +202,15 @@ void leader_end(bool success) {
 
 
 #define ALFRED_TIMEOUT() wait_ms(20);
-#define LEAD(key) \
-    rgb_matrix_set_color_overlay(KL_##key, RGB_ORANGE, 255);\
+#define LEAD_WITH_LED(key, led) \
+    rgb_matrix_set_color_overlay(led, RGB_ORANGE, 255);\
     success = false; \
-    if(keys[counter] == KC_##key && counter++ > -1) { \
+    if(keys[counter] == key && counter++ > -1) { \
        success = true;\
-       rgb_matrix_clear_overlay(); \
-    } \
+    }; \
     if(success)
+
+#define LEAD(key) LEAD_WITH_LED(KC_##key, KL_##key)
 #define HYPER_LEAD(key) LEAD(key) { tap_hyper(KC_##key); return true; }
 
 bool on_leader(uint16_t keys[]) {
@@ -218,55 +226,29 @@ bool on_leader(uint16_t keys[]) {
         HYPER_LEAD(S)
         HYPER_LEAD(D)
         HYPER_LEAD(C)
+
+    }
+    LEAD(B) {
         HYPER_LEAD(B)
+    }
+    LEAD(H) {
+        HYPER_LEAD(G)
+        HYPER_LEAD(F)
+        HYPER_LEAD(M)
+        HYPER_LEAD(R)
+    }
+    LEAD(W) {
+
+    }
+
+    LEAD_WITH_LED(KC_LEAD, KL_ESC) {
+        tap_code(KC_ESC);
+        return true;
     }
     // TODO: Fail here instead of just breaking out
     if(step > counter) return true;
     else return false;
-            // Apps
-        //     WHEN_KEY(KC_C, KL_C, {
-        //         SEND_STRING("SS");
-        //     });
-        //     switch (keys[1]) {
-        //         case KC_T:
-        //
-        //             return true;
-        //         case KC_S:
-        //
-        //             return true;
-        //         case KC_D:
-        //
-        //         case KC_C:
-        //             ;
-        //             return true;
-        //         case KC_B:
-        //             tap_hyper(KC_B);
-        //             return true;
-        //         default:
-        //             return false;
-
-
-        //     })
-        // // Windows
-        // // case KC_W:
-        // //     case KC_F:
-        // //     case
-
-        // //     return false;
-
-        // // Tabs
-        // // case KC_T:
-
-        // case KC_SPC:
-        //     register_code(KC_LGUI);
-        //     tap_code(KC_SPACE);
-        //     unregister_code(KC_LGUI);
-        //     return true;
-        // });
-    // };
-    // return false;
 }
-
 bool cmd_down = false;
 bool shift_down = false;
 bool ctrl_down = false;
@@ -347,7 +329,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         foreach (uint8_t* key, keys_txt) {
             rgb_matrix_set_color_overlay(*key, KEY_COLOR_TEXTUAL, 255);
         };
-        uint8_t keys_special[] = {KL_S, KL_F, KL_W, KL_R, KL_B, KL_Y, KL_T, KL_Z};
+        uint8_t keys_special[] = {KL_S, KL_F, KL_W, KL_R, KL_B, KL_Y, KL_T, KL_Z, KL_COMMA};
         foreach (uint8_t* key, keys_special) {
             rgb_matrix_set_color_overlay(*key, KEY_COLOR_SPECIAL, 255);
         };
@@ -403,6 +385,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 
     switch (keycode) {
+        case SLEEP_ALL:
+            if(record->event.pressed) {
+                rgb_matrix_toggle();
+                tap_hyper(KC_DEL);
+                return false;
+            }
+            return true;
+            break;
         case KC_G:
             if(MODS_CTRL && record->event.pressed) {
                 unregister_code(KC_LCTL);
@@ -410,9 +400,27 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 register_code(KC_LCTL);
                 return false;
             }
+            return true;
         case KC_SPC:
-            if(MODS_CTRL && record->event.pressed) {
+            if(LEADER_ENABLED && MODS_CTRL && record->event.pressed) {
                 process_leader(KC_LEAD, record);
+                return false;
+            }
+            return true;
+        case KC_SCOLON:
+            if(MODS_RALT && record->event.pressed) {
+                unregister_code(KC_RALT);
+                SEND_STRING("|");
+                register_code(KC_RALT);
+                return false;
+            }
+            return true;
+
+        case KC_QUOTE:
+            if(MODS_RALT && record->event.pressed) {
+                unregister_code(KC_RALT);
+                SEND_STRING(">");
+                register_code(KC_RALT);
                 return false;
             }
             return true;
@@ -510,4 +518,3 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return true; //Process all other keycodes normally
     }
 }
-

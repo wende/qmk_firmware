@@ -1,4 +1,5 @@
 RGB_MATRIX_EFFECT(reactive_gradient)
+RGB_MATRIX_EFFECT(ableton_live)
 // RGB_MATRIX_EFFECT(snake)
 
 #ifdef RGB_MATRIX_CUSTOM_EFFECT_IMPLS
@@ -55,7 +56,16 @@ static bool reactive_gradient(effect_params_t* params) {
 
     return led_max < DRIVER_LED_TOTAL;
 }
+/* ------------------------------- Ableton Live ----------------------------- */
+static bool ableton_live(effect_params_t* params) {
+    RGB_MATRIX_USE_LIMITS(led_min, led_max);
 
+    uint8_t keys_inner[] = {KEYBOARD_LED_INNER};
+        foreach (uint8_t* key, keys_inner) {
+            rgb_matrix_set_color(*key, RGB_ORANGE);
+        };
+    return led_max < DRIVER_LED_TOTAL;
+}
 /* --------------------------------- 2048 ----------------------------------- */
 
 // const uint8_t coord_to_led[4][4] = {
